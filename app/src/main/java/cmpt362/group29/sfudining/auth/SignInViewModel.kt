@@ -1,4 +1,6 @@
 package cmpt362.group29.sfudining.auth
 
-class SignInViewModel {
+import androidx.lifecycle.ViewModel
+
+class SignInViewModel : ViewModel() {
 }
