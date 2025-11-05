@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import cmpt362.group29.sfudining.restaurants.RestaurantMap
+import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.ui.components.HomePage
