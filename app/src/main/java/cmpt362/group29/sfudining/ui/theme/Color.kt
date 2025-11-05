@@ -10,6 +10,8 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-val SFURed = Color(0xFFE03E33)
+// https://www.sfu.ca/communicators-toolkit/brand/guidelines/colours.html
+val SFURed = Color(0xFFCC0633)
+val SFURedSecondary = Color(0xFFA6192E)
 val SFURedContainer = Color(0xFFFFFFFF)
 val OnSFURedContainer = Color(0xFF000000)

@@ -6,31 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
+import cmpt362.group29.sfudining.ui.components.HomePage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,13 +35,14 @@ fun MainPage() {
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { SFUTopAppBar() },
+        topBar = { SFUTopAppBar(scrollBehavior) },
         bottomBar = {
             SFUNavigationBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
         }
     ) { innerPadding ->
         when (selectedTab) {
-            0 -> Greeting("Home", Modifier.padding(innerPadding))
+            0 -> HomePage(Modifier
+                .padding(innerPadding))
             1 -> Greeting("Browse", Modifier.padding(innerPadding))
             2 -> Greeting("Map", Modifier.padding(innerPadding))
             3 -> Greeting("Profile", Modifier.padding(innerPadding))
@@ -69,10 +53,11 @@ fun MainPage() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SFUTopAppBar() {
+fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
+            scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
         title = {
@@ -82,10 +67,12 @@ fun SFUTopAppBar() {
             IconButton(onClick = { /* settings */ }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings"
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         },
+        scrollBehavior = scrollBehavior
     )
 }
 
