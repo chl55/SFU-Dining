@@ -14,18 +14,32 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCWrxfz1OPoUMPcU2KKHlA25y5-p1hU2ng"/>
+            android:value="AIzaSyCWrxfz1OPoUMPcU2KKHlA25y5-p1hU2ng" />
+
+        <activity
+            android:name=".auth.AuthActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SFUDining">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+        </activity>
+
+        <activity android:name=".auth.SignUpActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SFUDining">
+        </activity>
+
+        <activity android:name=".auth.SignInActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SFUDining">
+        </activity>
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name"
+            android:exported="false"
             android:theme="@style/Theme.SFUDining">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

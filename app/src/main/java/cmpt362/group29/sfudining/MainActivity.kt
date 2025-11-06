@@ -9,11 +9,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import cmpt362.group29.sfudining.restaurants.RestaurantMap
-import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.ui.components.HomePage
 
@@ -32,23 +37,104 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage() {
-    var selectedTab by remember { mutableStateOf(0) }
+    val startDestination = Destination.HOME
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val navController = rememberNavController()
+    // notes on how to do viewmodel: https://composables.com/blog/viewmodels-in-jetpack-compose
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { SFUTopAppBar(scrollBehavior) },
         bottomBar = {
-            SFUNavigationBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
+            SFUNavigationBar(navController)
         }
-    ) { innerPadding ->
-        when (selectedTab) {
-            0 -> HomePage(Modifier
-                .padding(innerPadding))
-            1 -> Greeting("Browse", Modifier.padding(innerPadding))
-            2 -> RestaurantNavHost()
-            3 -> Greeting("Profile", Modifier.padding(innerPadding))
-            else -> Greeting("Settings", Modifier.padding(innerPadding))
+    ) { contentPadding ->
+        AppNavHost(navController, startDestination, modifier = Modifier.padding((contentPadding)))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SFUNavigationBar(
+    navController: NavHostController
+) {
+    // References:
+    // https://developer.android.com/develop/ui/compose/components/navigation-bar
+    // https://developer.android.com/guide/navigation/use-graph/navigate
+    // https://developer.android.com/develop/ui/compose/navigation
+    // https://developer.android.com/guide/navigation/backstack#savestate saving states
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val selectedDestination = navBackStackEntry?.destination?.route
+
+    val selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer
+    val unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+    val selectedTextColor = selectedIconColor
+    val unselectedTextColor = unselectedIconColor
+    val indicatorColor = MaterialTheme.colorScheme.primaryContainer
+
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary
+    ) {
+        val itemColors = NavigationBarItemDefaults.colors(
+            selectedIconColor = selectedIconColor,
+            unselectedIconColor = unselectedIconColor,
+            selectedTextColor = selectedTextColor,
+            unselectedTextColor = unselectedTextColor,
+            indicatorColor = indicatorColor
+        )
+
+        Destination.entries.forEach { destination ->
+            NavigationBarItem(
+                selected = selectedDestination == destination.route,
+                onClick = {
+                    navController.navigate(destination.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                },
+                icon = { Icon(destination.icon, contentDescription = destination.title) },
+                label = { Text(destination.title) },
+                colors = itemColors
+            )
+        }
+    }
+}
+
+enum class Destination(
+    val title: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val route: String
+) {
+    HOME("Home", Icons.Default.Home, "home"),
+    BROWSE("Browse", Icons.Default.Search, "browse"),
+    MAP("Map", Icons.Default.Place, "map"),
+    PROFILE("Profile", Icons.Default.AccountCircle, "profile")
+}
+
+@Composable
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: Destination,
+    modifier: Modifier = Modifier,
+) {
+    // Referenced example from https://developer.android.com/develop/ui/compose/components/navigation-bar
+    NavHost(
+        navController = navController,
+        startDestination = startDestination.route
+    ) {
+        Destination.entries.forEach { destination ->
+            composable(destination.route) {
+                when (destination) {
+                    Destination.HOME -> HomePage(modifier)
+                    Destination.BROWSE -> BrowsePage(modifier)
+                    Destination.MAP -> RestaurantNavHost()
+                    Destination.PROFILE -> Greeting("Profile", modifier)
+                }
+            }
         }
     }
 }
@@ -77,62 +163,6 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
         scrollBehavior = scrollBehavior
     )
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SFUNavigationBar(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit
-) {
-    val selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
-    val selectedTextColor = selectedIconColor
-    val unselectedTextColor = unselectedIconColor
-    val indicatorColor = MaterialTheme.colorScheme.primaryContainer
-
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primary
-    ) {
-        val itemColors = NavigationBarItemDefaults.colors(
-            selectedIconColor = selectedIconColor,
-            unselectedIconColor = unselectedIconColor,
-            selectedTextColor = selectedTextColor,
-            unselectedTextColor = unselectedTextColor,
-            indicatorColor = indicatorColor
-        )
-
-        NavigationBarItem(
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            colors = itemColors
-        )
-        NavigationBarItem(
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            icon = { Icon(Icons.Default.Search, contentDescription = "Browse") },
-            label = { Text("Browse") },
-            colors = itemColors
-        )
-        NavigationBarItem(
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            icon = { Icon(Icons.Default.Place, contentDescription = "Map") },
-            label = { Text("Map") },
-            colors = itemColors
-        )
-        NavigationBarItem(
-            selected = selectedTab == 3,
-            onClick = { onTabSelected(3) },
-            icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
-            label = { Text("Profile") },
-            colors = itemColors
-        )
-    }
-}
-
-
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
