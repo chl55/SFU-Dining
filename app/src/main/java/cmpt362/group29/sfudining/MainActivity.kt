@@ -13,15 +13,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.ui.components.HomePage
+import cmpt362.group29.sfudining.visits.AddVisitPage
+import cmpt362.group29.sfudining.visits.VisitDetailPage
+import cmpt362.group29.sfudining.visits.VisitPage
+import cmpt362.group29.sfudining.visits.VisitRepository
+import cmpt362.group29.sfudining.visits.VisitViewModel
+import cmpt362.group29.sfudining.visits.VisitViewModelFactory
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,6 +123,7 @@ enum class Destination(
     HOME("Home", Icons.Default.Home, "home"),
     BROWSE("Browse", Icons.Default.Search, "browse"),
     MAP("Map", Icons.Default.Place, "map"),
+    CHECKINS("Check-Ins", Icons.Default.DateRange, "checkins"),
     PROFILE("Profile", Icons.Default.AccountCircle, "profile")
 }
 
@@ -133,9 +144,37 @@ fun AppNavHost(
                     Destination.HOME -> HomePage(modifier)
                     Destination.BROWSE -> BrowsePage(modifier)
                     Destination.MAP -> RestaurantNavHost()
+                    Destination.CHECKINS -> VisitPage(modifier, navController)
                     Destination.PROFILE -> Greeting("Profile", modifier)
                 }
             }
+        }
+        composable("add_visit") {
+            val repository = VisitRepository(FirebaseFirestore.getInstance())
+            AddVisitPage(
+                navController = navController,
+                viewModel = viewModel(
+                    factory = VisitViewModelFactory(repository)
+                ),
+                modifier = modifier
+            )
+        }
+        composable(
+            route = "visit_detail/{visitId}",
+            arguments = listOf(navArgument("visitId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val visitId = backStackEntry.arguments?.getString("visitId")
+            val repository = VisitRepository(FirebaseFirestore.getInstance())
+            // VM is not shared, fix later
+            val viewModel: VisitViewModel = viewModel(
+                factory = VisitViewModelFactory(repository)
+            )
+            val visit = viewModel.visits.find { it.id == visitId }
+            if (visit != null) {
+                println("Navigating to VisitDetailPage for visit ID: $visitId")
+                VisitDetailPage(visit, viewModel, navController, modifier)
+            }
+            println("Visit with ID $visitId not found.")
         }
     }
 }
