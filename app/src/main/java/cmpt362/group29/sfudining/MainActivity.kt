@@ -46,7 +46,7 @@ fun MainPage() {
             0 -> HomePage(Modifier
                 .padding(innerPadding))
             1 -> Greeting("Browse", Modifier.padding(innerPadding))
-            2 -> Greeting("Map", Modifier.padding(innerPadding))
+            2 -> RestaurantNavHost()
             3 -> Greeting("Profile", Modifier.padding(innerPadding))
             else -> Greeting("Settings", Modifier.padding(innerPadding))
         }

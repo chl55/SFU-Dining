@@ -57,6 +57,7 @@ fun RestaurantMap(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
+                Spacer(modifier = Modifier.height(80.dp))
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = restaurant.name)
                     Spacer(modifier = Modifier.height(10.dp))
