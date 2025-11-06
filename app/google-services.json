@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "80923087531",
+    "project_id": "group29-sfudining",
+    "storage_bucket": "group29-sfudining.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:80923087531:android:25289a7b0bfe529e999dee",
+        "android_client_info": {
+          "package_name": "cmpt362.group29.sfudining"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoUs0ElmNkGTED57A07gzXYv3QLhAjnoo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
