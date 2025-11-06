@@ -131,7 +131,7 @@ fun AppNavHost(
                 when (destination) {
                     Destination.HOME -> HomePage(modifier)
                     Destination.BROWSE -> BrowsePage(modifier)
-                    Destination.MAP -> Greeting("Map", modifier)
+                    Destination.MAP -> RestaurantNavHost()
                     Destination.PROFILE -> Greeting("Profile", modifier)
                 }
             }

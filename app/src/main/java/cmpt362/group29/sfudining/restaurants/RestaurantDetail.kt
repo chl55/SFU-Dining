@@ -33,6 +33,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, onBack: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
+        Spacer(modifier = Modifier.height(80.dp))
         RestaurantImg()
         Spacer(modifier = Modifier.height(16.dp))
         RestaurantDesc(restaurant)
@@ -42,7 +43,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, onBack: () -> Unit) {
         ) {
             FeaturedItems()
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(15.dp))
         Button(onBack, Modifier.align(Alignment.End)) {
             Text("Back")
         }
@@ -51,7 +52,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, onBack: () -> Unit) {
 @Composable
 fun RestaurantImg() {
     Card(
-        modifier = Modifier.fillMaxWidth().height(275.dp),
+        modifier = Modifier.fillMaxWidth().height(150.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
         Image(
@@ -59,6 +60,7 @@ fun RestaurantImg() {
             contentDescription = "Uncle Fatih's Pizza",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
+            alignment = Alignment.Center
 
         )
     }
