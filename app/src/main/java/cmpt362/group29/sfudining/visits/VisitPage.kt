@@ -43,16 +43,10 @@ fun onAddVisitButtonClick(navController: NavHostController) {
 }
 
 @Composable
-fun VisitPage(modifier: Modifier = Modifier, navController: NavHostController) {
+fun VisitPage(modifier: Modifier = Modifier, navController: NavHostController, viewModel : VisitViewModel) {
     // Get current user id
     val auth = AuthRepository()
     val userId = auth.getCurrentUser()?.uid
-
-    val firestore = FirebaseFirestore.getInstance()
-    val repository = remember { VisitRepository(firestore) }
-    val viewModel: VisitViewModel = viewModel(
-        factory = VisitViewModelFactory(repository)
-    )
 
     LaunchedEffect(userId) {
         viewModel.loadVisits(userId!!)
