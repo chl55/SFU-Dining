@@ -147,7 +147,7 @@ fun AppNavHost(
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> HomePage(modifier)
+                    Destination.HOME -> RestaurantNavHost(modifier,"home_page")
                     Destination.BROWSE -> RestaurantNavHost(modifier,"browse_list")
                     Destination.MAP -> RestaurantNavHost(modifier,"map")
                     Destination.CHECKINS -> VisitPage(modifier, navController)

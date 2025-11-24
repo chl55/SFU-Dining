@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.cart.CartViewModel
+import cmpt362.group29.sfudining.ui.components.HomePage
 
 @Composable
 fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
@@ -31,6 +32,15 @@ fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
         }
         composable("browse_list") {
             BrowsePage(
+                modifier = modifier,
+                restaurants = restaurants,
+                onRestaurantClick = { restaurantId ->
+                    navController.navigate("info/$restaurantId")
+                }
+            )
+        }
+        composable("home_page") {
+            HomePage(
                 modifier = modifier,
                 restaurants = restaurants,
                 onRestaurantClick = { restaurantId ->

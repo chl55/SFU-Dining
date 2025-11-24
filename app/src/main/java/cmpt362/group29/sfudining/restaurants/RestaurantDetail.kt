@@ -1,8 +1,6 @@
 package cmpt362.group29.sfudining.restaurants
 
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
@@ -32,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import cmpt362.group29.sfudining.R
@@ -45,7 +41,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.cart.CartItem
 import cmpt362.group29.sfudining.cart.CartViewModel
 
@@ -125,7 +120,7 @@ fun RestaurantDesc(restaurant: Restaurant?) {
         style = MaterialTheme.typography.headlineMedium
     )
     Text(
-        text = restaurant?.cuisine ?: "Unknown Cuisine",
+        text = restaurant?.category ?: "Unknown Cuisine",
         style = MaterialTheme.typography.bodyMedium
     )
     Spacer(modifier = Modifier.height(16.dp))
