@@ -28,4 +28,8 @@ class AuthViewModel : ViewModel() {
     fun signOut() {
         AuthRepository().signOut()
     }
+
+    fun getUserEmail(): String? {
+        return AuthRepository().getUserEmail()
+    }
 }

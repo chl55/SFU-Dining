@@ -25,9 +25,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cmpt362.group29.sfudining.restaurants.Restaurant
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import coil.compose.rememberAsyncImagePainter
 
 @Composable
-fun BrowsePage(modifier: Modifier = Modifier) {
+fun BrowsePage(
+    restaurants: List<Restaurant>,
+    modifier: Modifier = Modifier,
+    onRestaurantClick: (String) -> Unit
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -35,10 +43,14 @@ fun BrowsePage(modifier: Modifier = Modifier) {
             .padding(6.dp)
     ) {
         SearchBar()
-        RestaurantRow() // TODO: use LazyRow (recyclerview) and add dividers with lazyrow
-        RestaurantRow()
-        RestaurantRow()
-        RestaurantRow()
+        restaurants.forEach { restaurant ->
+            RestaurantRow(
+                name = restaurant.name,
+                description = restaurant.description,
+                restaurantImageURL = restaurant.restaurantImageURL,
+                onClick = { onRestaurantClick(restaurant.id) }
+            )
+        }
     }
 }
 
@@ -72,16 +84,19 @@ fun SearchBar(
 }
 
 @Composable
-fun RestaurantRow(
+private fun RestaurantRow(
     name: String = "Restaurant Name",
     description: String = "Restaurant Details",
+    restaurantImageURL: String = "",
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .padding(start = 12.dp)
-            .padding(end = 4.dp),
+            .padding(end = 4.dp)
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -97,7 +112,15 @@ fun RestaurantRow(
                 .size(64.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(model = restaurantImageURL),
+                contentDescription = "Restaurant Image",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+        }
     }
     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 }
@@ -105,5 +128,9 @@ fun RestaurantRow(
 @Preview(showBackground = true)
 @Composable
 private fun Preview() {
-    BrowsePage()
+    BrowsePage(
+        restaurants = emptyList(),
+        modifier = Modifier,
+        onRestaurantClick = {}
+    )
 }

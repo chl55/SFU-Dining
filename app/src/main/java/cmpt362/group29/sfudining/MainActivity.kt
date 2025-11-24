@@ -84,7 +84,7 @@ private fun SFUNavigationBar(
     val selectedDestination = navBackStackEntry?.destination?.route
 
     val selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+    val unselectedIconColor = selectedIconColor.copy(alpha = 0.5f)
     val selectedTextColor = selectedIconColor
     val unselectedTextColor = unselectedIconColor
     val indicatorColor = MaterialTheme.colorScheme.primaryContainer
@@ -147,20 +147,24 @@ fun AppNavHost(
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> HomePage(modifier)
-                    Destination.BROWSE -> BrowsePage(modifier)
-                    Destination.MAP -> RestaurantNavHost()
+                    Destination.HOME -> RestaurantNavHost(modifier,"home_page")
+                    Destination.BROWSE -> RestaurantNavHost(modifier,"browse_list")
+                    Destination.MAP -> RestaurantNavHost(modifier,"map")
                     Destination.CHECKINS -> VisitPage(modifier, navController)
-                    Destination.PROFILE -> Profile(
-                        onSignOutClick = {
-                            val context = LocalContext.current
-                            authViewModel.signOut()
-                            val intent = Intent(context, AuthActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    Destination.PROFILE -> {
+                        val userEmail = remember { authViewModel.getUserEmail() }
+                        Profile(
+                            email = userEmail ?: "Not logged in", // Pass the email
+                            onSignOutClick = {
+                                val context = LocalContext.current
+                                authViewModel.signOut()
+                                val intent = Intent(context, AuthActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
