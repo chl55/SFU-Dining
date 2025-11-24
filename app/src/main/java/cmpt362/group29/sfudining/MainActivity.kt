@@ -25,10 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cmpt362.group29.sfudining.auth.AuthActivity
 import cmpt362.group29.sfudining.auth.AuthViewModel
-import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
-import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.ui.components.HomePage
 import cmpt362.group29.sfudining.visits.AddVisitPage
@@ -85,7 +83,7 @@ private fun SFUNavigationBar(
     val selectedDestination = navBackStackEntry?.destination?.route
 
     val selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+    val unselectedIconColor = selectedIconColor.copy(alpha = 0.5f)
     val selectedTextColor = selectedIconColor
     val unselectedTextColor = unselectedIconColor
     val indicatorColor = MaterialTheme.colorScheme.primaryContainer
@@ -141,11 +139,7 @@ fun AppNavHost(
 ) {
     // Referenced example from https://developer.android.com/develop/ui/compose/components/navigation-bar
     val authViewModel: AuthViewModel = viewModel()
-    val restaurantViewModel: RestaurantViewModel = viewModel()
-    val restaurants by restaurantViewModel.restaurants.collectAsState(emptyList())
-    LaunchedEffect(Unit) {
-        restaurantViewModel.getRestaurants()
-    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination.route
@@ -154,8 +148,8 @@ fun AppNavHost(
             composable(destination.route) {
                 when (destination) {
                     Destination.HOME -> HomePage(modifier)
-                    Destination.BROWSE -> BrowsePage(restaurants, modifier)
-                    Destination.MAP -> RestaurantNavHost()
+                    Destination.BROWSE -> RestaurantNavHost(modifier,"browse_list")
+                    Destination.MAP -> RestaurantNavHost(modifier,"map")
                     Destination.CHECKINS -> VisitPage(modifier, navController)
                     Destination.PROFILE -> {
                         val userEmail = remember { authViewModel.getUserEmail() }

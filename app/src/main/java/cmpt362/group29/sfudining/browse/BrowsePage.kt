@@ -27,11 +27,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cmpt362.group29.sfudining.restaurants.Restaurant
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import coil.compose.rememberAsyncImagePainter
-import androidx.compose.ui.draw.clip
 
 @Composable
-fun BrowsePage(restaurants: List<Restaurant>, modifier: Modifier = Modifier) {
+fun BrowsePage(
+    restaurants: List<Restaurant>,
+    modifier: Modifier = Modifier,
+    onRestaurantClick: (String) -> Unit
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,7 +48,7 @@ fun BrowsePage(restaurants: List<Restaurant>, modifier: Modifier = Modifier) {
                 name = restaurant.name,
                 description = restaurant.description,
                 restaurantImageURL = restaurant.restaurantImageURL,
-                id = restaurant.id
+                onClick = { onRestaurantClick(restaurant.id) }
             )
         }
     }
@@ -84,14 +88,15 @@ private fun RestaurantRow(
     name: String = "Restaurant Name",
     description: String = "Restaurant Details",
     restaurantImageURL: String = "",
-    id: String
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .padding(start = 12.dp)
-            .padding(end = 4.dp),
+            .padding(end = 4.dp)
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -124,7 +129,8 @@ private fun RestaurantRow(
 @Composable
 private fun Preview() {
     BrowsePage(
-        restaurants = TODO(),
-        modifier = TODO()
+        restaurants = emptyList(),
+        modifier = Modifier,
+        onRestaurantClick = {}
     )
 }
