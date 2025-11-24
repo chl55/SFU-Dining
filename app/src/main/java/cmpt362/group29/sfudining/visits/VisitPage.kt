@@ -76,7 +76,7 @@ fun VisitPage(
                             fontWeight = FontWeight.Bold
                         ),
                         modifier = Modifier
-                            .padding(top = 12.dp, bottom = 8.dp)
+                            .padding(8.dp)
                     )
                     InsightsEntryBox(
                         modifier = Modifier
