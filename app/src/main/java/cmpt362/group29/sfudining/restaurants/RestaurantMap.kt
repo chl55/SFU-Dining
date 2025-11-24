@@ -1,5 +1,6 @@
 package cmpt362.group29.sfudining.restaurants
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,7 +45,13 @@ fun RestaurantMap(
                 mapType = MapType.TERRAIN)
         ) {
             for (restaurant in restaurants) {
-                Marker(state = MarkerState(restaurant.latLng), title = restaurant.name,
+                Log.d("ViewModel", "Fetched restaurant: ${restaurant.name}")
+                Marker(state = MarkerState(
+                    position = LatLng(
+                        restaurant.location.latitude,
+                        restaurant.location.longitude
+                    )
+                ), title = restaurant.name,
                     onClick = {
                         selectedRestaurant = restaurant
                         true
