@@ -120,7 +120,7 @@ private fun RestaurantInfo(restaurant: Restaurant) {
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            text = "${restaurant.category}", // Cuisines: burgers, sushi, chinese, indian, etc...
+            text = "${restaurant.cuisine}", // Cuisines: burgers, sushi, chinese, indian, etc...
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Normal
         )

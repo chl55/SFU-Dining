@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,21 +29,48 @@ import androidx.compose.ui.unit.dp
 import cmpt362.group29.sfudining.restaurants.Restaurant
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.horizontalScroll
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowsePage(
-    restaurants: List<Restaurant>,
     modifier: Modifier = Modifier,
     onRestaurantClick: (String) -> Unit
 ) {
+    val viewModel = viewModel<BrowseViewModel>()
+    val searchText by viewModel.searchText.collectAsState()
+    val restaurants by viewModel.restaurants.collectAsState()
+    val cuisines by viewModel.cuisines.collectAsState(initial = emptyMap())
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(6.dp)
     ) {
-        SearchBar()
+        SearchBar(
+            query = searchText,
+            onQueryChange = viewModel::onSearchTextChange
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            cuisines.forEach { (cuisine, isSelected) ->
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { viewModel.onCuisineSelected(cuisine, !isSelected) },
+                    label = { Text(cuisine) }
+                )
+            }
+        }
         restaurants.forEach { restaurant ->
             RestaurantRow(
                 name = restaurant.name,
@@ -58,6 +86,7 @@ fun BrowsePage(
 @Composable
 fun SearchBar(
     query: String = "",
+    onQueryChange: (String) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -69,17 +98,13 @@ fun SearchBar(
     ) {
         TextField(
             value = query,
-            onValueChange = {},
+            onValueChange = onQueryChange,
             modifier = Modifier.weight(2f),
             placeholder = { Text("Search restaurants...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             singleLine = true,
             colors = TextFieldDefaults.colors()
         )
-
-        IconButton(onClick = {}) {
-            Icon(FilterIcon, contentDescription = "Filter Button", Modifier.alpha(0.75F))
-        }
     }
 }
 
@@ -129,7 +154,6 @@ private fun RestaurantRow(
 @Composable
 private fun Preview() {
     BrowsePage(
-        restaurants = emptyList(),
         modifier = Modifier,
         onRestaurantClick = {}
     )
