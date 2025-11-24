@@ -3,6 +3,7 @@ package cmpt362.group29.sfudining.visits
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
@@ -20,16 +22,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import cmpt362.group29.sfudining.auth.AuthRepository
-import com.google.firebase.firestore.FirebaseFirestore
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -43,7 +43,11 @@ fun onAddVisitButtonClick(navController: NavHostController) {
 }
 
 @Composable
-fun VisitPage(modifier: Modifier = Modifier, navController: NavHostController, viewModel : VisitViewModel) {
+fun VisitPage(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: VisitViewModel
+) {
     // Get current user id
     val auth = AuthRepository()
     val userId = auth.getCurrentUser()?.uid
@@ -59,7 +63,38 @@ fun VisitPage(modifier: Modifier = Modifier, navController: NavHostController, v
         if (visits.isEmpty()) {
             NoVisitsMessage()
         } else {
-            VisitList(visits, navController)
+            if (visits.isEmpty()) {
+                NoVisitsMessage()
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        text = "Insights",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier
+                            .padding(top = 12.dp, bottom = 8.dp)
+                    )
+                    InsightsEntryBox(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        navController = navController
+                    )
+                    Text(
+                        text = "Check-Ins",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier
+                            .padding(8.dp)
+                    )
+                    VisitList(visits, navController)
+                }
+            }
         }
     }
     Box(
@@ -68,8 +103,48 @@ fun VisitPage(modifier: Modifier = Modifier, navController: NavHostController, v
     ) {
         AddVisitButton(navController)
     }
-
 }
+
+@Composable
+fun InsightsEntryBox(modifier: Modifier = Modifier, navController: NavController) {
+    Card(
+        modifier = modifier
+            .clickable { navController.navigate("insights") },
+        shape = MaterialTheme.shapes.large,
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(6.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = Color(0xFFEC6A6A)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(18.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "How much did you spend this month?",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFFB00020)
+                )
+                Text(
+                    text = "Tap to view your monthly insights!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // right chevron
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 
 @Composable
 fun AddVisitButton(navController: NavHostController) {

@@ -63,16 +63,14 @@ private fun SFUNavigationBar(navController: NavHostController) {
     val selectedDestination = navBackStackEntry?.destination?.route
     val selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer
     val unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
-    val selectedTextColor = selectedIconColor
-    val unselectedTextColor = unselectedIconColor
     val indicatorColor = MaterialTheme.colorScheme.primaryContainer
 
     NavigationBar(containerColor = MaterialTheme.colorScheme.primary) {
         val itemColors = NavigationBarItemDefaults.colors(
             selectedIconColor = selectedIconColor,
             unselectedIconColor = unselectedIconColor,
-            selectedTextColor = selectedTextColor,
-            unselectedTextColor = unselectedTextColor,
+            selectedTextColor = selectedIconColor,
+            unselectedTextColor = unselectedIconColor,
             indicatorColor = indicatorColor
         )
 
@@ -167,6 +165,17 @@ fun AppNavHost(
             if (visit != null) {
                 VisitDetailPage(visit, visitViewModel, navController, modifier)
             }
+        }
+        composable("insights") { backStackEntry ->
+            val repository = VisitRepository(FirebaseFirestore.getInstance())
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Destination.CHECKINS.route)
+            }
+            val visitViewModel: VisitViewModel = viewModel(
+                viewModelStoreOwner = parentEntry,
+                factory = VisitViewModelFactory(repository)
+            )
+            InsightsPage(visitViewModel, modifier)
         }
     }
 }
