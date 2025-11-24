@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +23,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cmpt362.group29.sfudining.MainActivity
+import cmpt362.group29.sfudining.ui.theme.OnSFURedContainer
+import cmpt362.group29.sfudining.ui.theme.SFURed
+import cmpt362.group29.sfudining.ui.theme.SFURedContainer
 
 class AuthActivity : ComponentActivity() {
 
@@ -52,13 +58,15 @@ class AuthActivity : ComponentActivity() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(SFURed)
                 .padding(32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Welcome",
+                text = "Welcome to SFU Dining!",
                 style = MaterialTheme.typography.headlineLarge,
+                color = SFURedContainer,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 48.dp)
             )
@@ -67,18 +75,20 @@ class AuthActivity : ComponentActivity() {
                 onClick = { onSignUpClick(context) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SFURedContainer)
             ) {
-                Text("Sign Up")
+                Text("Sign Up", color = OnSFURedContainer)
             }
 
             Button(
                 onClick = { onSignInClick(context) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SFURedContainer)
             ) {
-                Text("Sign In")
+                Text("Sign In", color = OnSFURedContainer)
             }
         }
     }

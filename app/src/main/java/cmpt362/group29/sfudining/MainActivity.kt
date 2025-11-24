@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cmpt362.group29.sfudining.auth.AuthActivity
 import cmpt362.group29.sfudining.auth.AuthViewModel
+import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
@@ -139,7 +140,6 @@ fun AppNavHost(
 ) {
     // Referenced example from https://developer.android.com/develop/ui/compose/components/navigation-bar
     val authViewModel: AuthViewModel = viewModel()
-
     NavHost(
         navController = navController,
         startDestination = startDestination.route
