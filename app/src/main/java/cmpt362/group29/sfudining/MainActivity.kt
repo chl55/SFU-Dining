@@ -1,5 +1,6 @@
 package cmpt362.group29.sfudining
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -21,7 +23,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import cmpt362.group29.sfudining.auth.AuthActivity
+import cmpt362.group29.sfudining.auth.AuthViewModel
 import cmpt362.group29.sfudining.browse.BrowsePage
+import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.ui.components.HomePage
@@ -134,6 +139,7 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
 ) {
     // Referenced example from https://developer.android.com/develop/ui/compose/components/navigation-bar
+    val authViewModel: AuthViewModel = viewModel()
     NavHost(
         navController = navController,
         startDestination = startDestination.route
@@ -145,7 +151,16 @@ fun AppNavHost(
                     Destination.BROWSE -> BrowsePage(modifier)
                     Destination.MAP -> RestaurantNavHost()
                     Destination.CHECKINS -> VisitPage(modifier, navController)
-                    Destination.PROFILE -> Greeting("Profile", modifier)
+                    Destination.PROFILE -> Profile(
+                        onSignOutClick = {
+                            val context = LocalContext.current
+                            authViewModel.signOut()
+                            val intent = Intent(context, AuthActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            context.startActivity(intent)
+                        }
+                    )
                 }
             }
         }

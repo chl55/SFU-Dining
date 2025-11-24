@@ -3,6 +3,8 @@ package cmpt362.group29.sfudining.auth
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,15 +19,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import cmpt362.group29.sfudining.MainActivity
 
 class AuthActivity : ComponentActivity() {
 
+    private val authRepository = AuthRepository()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            AuthScreen()
+        if (authRepository.getCurrentUser() != null) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        } else {
+            setContent {
+                AuthScreen()
+            }
         }
     }
 
