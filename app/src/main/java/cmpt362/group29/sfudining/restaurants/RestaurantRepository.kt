@@ -3,9 +3,40 @@ package cmpt362.group29.sfudining.restaurants
 import android.util.Log
 import com.google.firebase.firestore.firestore
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.tasks.await
 
 // https://firebase.google.com/docs/firestore/query-data/get-data
+
+data class MenuItem(
+    val title: String = "",
+    val description: String = "",
+    val price: String = ""
+)
+
+data class FeaturedItem(
+    val title: String = "",
+    val description: String = "",
+    val price: String = "",
+    val imageName: String = ""
+)
+
+data class OpeningHours(
+    val day: String = "",
+    val hours: String = ""
+)
+data class Restaurant(
+    val id: String = "",
+    val name: String = "",
+    val location: GeoPoint = GeoPoint(0.0, 0.0),
+    val cuisine: String = "",
+    val schedule: List<OpeningHours> = emptyList(),
+    val phoneNum: String = "",
+    val address: String = "",
+    val featuredItems: List<FeaturedItem> = emptyList(),
+    val menu: List<MenuItem> = emptyList()
+)
+
 class RestaurantRepository {
     private val store = Firebase.firestore
     private val restaurantRef = store.collection("restaurants")

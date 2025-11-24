@@ -43,6 +43,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import cmpt362.group29.sfudining.cart.CartDetailScreen
+import cmpt362.group29.sfudining.cart.CartItem
+import cmpt362.group29.sfudining.cart.CartViewModel
 
 object FeaturedImages {
     val imageMap = mapOf(
@@ -53,7 +58,7 @@ object FeaturedImages {
 }
 
 @Composable
-fun RestaurantDetailScreen(restaurant: Restaurant?, onBack: () -> Unit) {
+fun RestaurantDetailScreen(restaurant: Restaurant?, cartViewModel: CartViewModel = viewModel(), navController: NavController, onBack: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -69,11 +74,11 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, onBack: () -> Unit) {
             RestaurantDesc(restaurant)
             Spacer(modifier = Modifier.height(16.dp))
             restaurant?.featuredItems?.let {
-                FeaturedItems(it)
+                FeaturedItems(it, cartViewModel)
             }
             Spacer(modifier = Modifier.height(16.dp))
             restaurant?.menu?.let { menuItems ->
-                MenuItemList(menuItems)
+                MenuItemList(menuItems, cartViewModel)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(onBack, Modifier.align(Alignment.Start)) {
@@ -81,7 +86,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, onBack: () -> Unit) {
             }
         }
         FloatingActionButton(
-            onClick = { },
+            onClick = { navController.navigate("cart") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 120.dp, end = 10.dp)
@@ -151,19 +156,19 @@ fun RestaurantDesc(restaurant: Restaurant?) {
 }
 
 @Composable
-fun FeaturedItems(items: List<FeaturedItem>) {
+fun FeaturedItems(items: List<FeaturedItem>, cartViewModel: CartViewModel) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items(items) { item ->
-            FeaturedItemCard(item)
+            FeaturedItemCard(item, cartViewModel)
         }
     }
 }
 
 @Composable
-fun FeaturedItemCard(item: FeaturedItem) {
+fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel) {
     Card(
         modifier = Modifier.widthIn(min = 200.dp, max = 250.dp),
         shape = RoundedCornerShape(12.dp),
@@ -208,7 +213,11 @@ fun FeaturedItemCard(item: FeaturedItem) {
                     )
                 }
                 IconButton(
-                    onClick = { /* Add to order */ }
+                    onClick = { cartViewModel.addItem(
+                        CartItem(
+                            item.title, item.price, 1
+                        )
+                    )}
                 ) {
                     Icon(
                         Icons.Default.Add,
@@ -223,13 +232,13 @@ fun FeaturedItemCard(item: FeaturedItem) {
 }
 
 @Composable
-fun MenuItemList(items: List<MenuItem>) {
+fun MenuItemList(items: List<MenuItem>, cartViewModel: CartViewModel) {
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items.forEachIndexed { index, item ->
-            MenuItem(item)
+            MenuItems(item, cartViewModel)
             if (index < items.size - 1) {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
@@ -242,7 +251,7 @@ fun MenuItemList(items: List<MenuItem>) {
 }
 
 @Composable
-fun MenuItem(item: MenuItem) {
+fun MenuItems(item: MenuItem, cartViewModel: CartViewModel) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -266,7 +275,11 @@ fun MenuItem(item: MenuItem) {
             )
         }
         IconButton(
-            onClick = { /* Add to order */ }
+            onClick = { cartViewModel.addItem(
+                CartItem(
+                    item.title, item.price, 1
+                )
+            )}
         ) {
             Icon(
                 Icons.Default.Add,
