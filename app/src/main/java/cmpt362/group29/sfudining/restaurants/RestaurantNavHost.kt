@@ -33,7 +33,6 @@ fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
         composable("browse_list") {
             BrowsePage(
                 modifier = modifier,
-                restaurants = restaurants,
                 onRestaurantClick = { restaurantId ->
                     navController.navigate("info/$restaurantId")
                 }

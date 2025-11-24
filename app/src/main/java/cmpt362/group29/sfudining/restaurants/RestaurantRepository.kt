@@ -30,7 +30,7 @@ data class Restaurant(
     val average_price: String = "",
     val name: String = "",
     val location: GeoPoint = GeoPoint(0.0, 0.0),
-    val category: String = "",
+    val cuisine: String = "",
     val schedule: List<OpeningHours> = emptyList(),
     val phoneNum: String = "",
     val address: String = "",

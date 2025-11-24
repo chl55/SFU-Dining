@@ -120,7 +120,7 @@ fun RestaurantDesc(restaurant: Restaurant?) {
         style = MaterialTheme.typography.headlineMedium
     )
     Text(
-        text = restaurant?.category ?: "Unknown Cuisine",
+        text = restaurant?.cuisine ?: "Unknown Cuisine",
         style = MaterialTheme.typography.bodyMedium
     )
     Spacer(modifier = Modifier.height(16.dp))
