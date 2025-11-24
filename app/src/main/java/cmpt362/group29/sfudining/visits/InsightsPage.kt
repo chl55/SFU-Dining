@@ -75,7 +75,7 @@ fun InsightsPage(
             }
 
             Mode.PER_VISIT -> {
-                visitsThisMonth.map { visit ->
+                visitsThisMonth.sortedBy { it.datetime }.map { visit ->
                     when (selectedMetric) {
                         Metric.SPENDING -> visit.totalCost ?: 0.0
                         Metric.CALORIES -> visit.totalCal?.toDouble() ?: 0.0
