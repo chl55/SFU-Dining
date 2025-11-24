@@ -24,4 +24,8 @@ class AuthViewModel : ViewModel() {
     fun signIn(onResult: (Boolean, String?) -> Unit) {
         AuthRepository().signIn(email, password, onResult)
     }
+
+    fun signOut() {
+        AuthRepository().signOut()
+    }
 }
