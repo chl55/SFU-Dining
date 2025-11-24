@@ -28,6 +28,7 @@ import cmpt362.group29.sfudining.auth.AuthViewModel
 import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
+import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.ui.components.HomePage
 import cmpt362.group29.sfudining.visits.AddVisitPage
@@ -140,6 +141,11 @@ fun AppNavHost(
 ) {
     // Referenced example from https://developer.android.com/develop/ui/compose/components/navigation-bar
     val authViewModel: AuthViewModel = viewModel()
+    val restaurantViewModel: RestaurantViewModel = viewModel()
+    val restaurants by restaurantViewModel.restaurants.collectAsState(emptyList())
+    LaunchedEffect(Unit) {
+        restaurantViewModel.getRestaurants()
+    }
     NavHost(
         navController = navController,
         startDestination = startDestination.route
@@ -148,19 +154,23 @@ fun AppNavHost(
             composable(destination.route) {
                 when (destination) {
                     Destination.HOME -> HomePage(modifier)
-                    Destination.BROWSE -> BrowsePage(modifier)
+                    Destination.BROWSE -> BrowsePage(restaurants, modifier)
                     Destination.MAP -> RestaurantNavHost()
                     Destination.CHECKINS -> VisitPage(modifier, navController)
-                    Destination.PROFILE -> Profile(
-                        onSignOutClick = {
-                            val context = LocalContext.current
-                            authViewModel.signOut()
-                            val intent = Intent(context, AuthActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    Destination.PROFILE -> {
+                        val userEmail = remember { authViewModel.getUserEmail() }
+                        Profile(
+                            email = userEmail ?: "Not logged in", // Pass the email
+                            onSignOutClick = {
+                                val context = LocalContext.current
+                                authViewModel.signOut()
+                                val intent = Intent(context, AuthActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
