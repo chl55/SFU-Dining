@@ -62,7 +62,9 @@ private fun SFUNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val selectedDestination = navBackStackEntry?.destination?.route
     val selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+    val unselectedIconColor = selectedIconColor.copy(alpha = 0.5f)
+    val selectedTextColor = selectedIconColor
+    val unselectedTextColor = unselectedIconColor
     val indicatorColor = MaterialTheme.colorScheme.primaryContainer
 
     NavigationBar(containerColor = MaterialTheme.colorScheme.primary) {
@@ -115,25 +117,30 @@ fun AppNavHost(
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> HomePage(modifier)
-                    Destination.BROWSE -> BrowsePage(modifier)
-                    Destination.MAP -> RestaurantNavHost()
-                    Destination.CHECKINS -> {
+                    Destination.HOME -> RestaurantNavHost(modifier,"home_page")
+                    Destination.BROWSE -> RestaurantNavHost(modifier,"browse_list")
+                    Destination.MAP -> RestaurantNavHost(modifier,"map")
+                                        Destination.CHECKINS -> {
                         val repository = VisitRepository(FirebaseFirestore.getInstance())
                         val visitViewModel: VisitViewModel = viewModel(
                             factory = VisitViewModelFactory(repository)
                         )
                         VisitPage(modifier, navController, visitViewModel)
                     }
-
-                    Destination.PROFILE -> Profile(onSignOutClick = {
-                        val context = LocalContext.current
-                        authViewModel.signOut()
-                        val intent = Intent(context, AuthActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        }
-                        context.startActivity(intent)
-                    })
+                    Destination.PROFILE -> {
+                        val userEmail = remember { authViewModel.getUserEmail() }
+                        Profile(
+                            email = userEmail ?: "Not logged in", // Pass the email
+                            onSignOutClick = {
+                                val context = LocalContext.current
+                                authViewModel.signOut()
+                                val intent = Intent(context, AuthActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                }
+                                context.startActivity(intent)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -203,4 +210,17 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
         },
         scrollBehavior = scrollBehavior
     )
+}
+@Composable
+fun Greeting(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    MainPage()
 }

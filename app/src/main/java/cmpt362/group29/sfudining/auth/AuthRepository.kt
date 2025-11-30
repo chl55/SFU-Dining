@@ -31,4 +31,6 @@ class AuthRepository {
     fun signOut() {
         auth.signOut()
     }
+
+    fun getUserEmail(): String? = auth.currentUser?.email
 }
