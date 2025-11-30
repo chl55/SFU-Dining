@@ -83,7 +83,10 @@ private fun SFUNavigationBar(navController: NavHostController) {
                     navController.navigate(destination.route) {
                         launchSingleTop = true
                         restoreState = true
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                            saveState = true
+                        }
                     }
                 },
                 icon = { Icon(destination.icon, contentDescription = destination.title) },
@@ -117,16 +120,17 @@ fun AppNavHost(
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> RestaurantNavHost(modifier,"home_page")
-                    Destination.BROWSE -> RestaurantNavHost(modifier,"browse_list")
-                    Destination.MAP -> RestaurantNavHost(modifier,"map")
-                                        Destination.CHECKINS -> {
+                    Destination.HOME -> RestaurantNavHost(modifier, "home_page")
+                    Destination.BROWSE -> RestaurantNavHost(modifier, "browse_list")
+                    Destination.MAP -> RestaurantNavHost(modifier, "map")
+                    Destination.CHECKINS -> {
                         val repository = VisitRepository(FirebaseFirestore.getInstance())
                         val visitViewModel: VisitViewModel = viewModel(
                             factory = VisitViewModelFactory(repository)
                         )
                         VisitPage(modifier, navController, visitViewModel)
                     }
+
                     Destination.PROFILE -> {
                         val userEmail = remember { authViewModel.getUserEmail() }
                         Profile(
@@ -135,7 +139,8 @@ fun AppNavHost(
                                 val context = LocalContext.current
                                 authViewModel.signOut()
                                 val intent = Intent(context, AuthActivity::class.java).apply {
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    flags =
+                                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
                                 context.startActivity(intent)
                             }
@@ -210,17 +215,4 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
         },
         scrollBehavior = scrollBehavior
     )
-}
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MainPage()
 }
