@@ -125,7 +125,7 @@ private fun RestaurantInfo(restaurant: Restaurant) {
             fontWeight = FontWeight.Normal
         )
         Text(
-            text = "Average Price: ${restaurant.average_price}",
+            text = "Average Price: ${restaurant.averagePrice}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
