@@ -6,6 +6,7 @@ data class CartItem(
     val restaurantName: String,
     val title: String,
     val price: String,
+    val calories: Int,
     val quantity: Int = 1
 )
 

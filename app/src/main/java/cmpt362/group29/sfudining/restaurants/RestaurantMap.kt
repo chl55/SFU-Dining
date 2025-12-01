@@ -35,13 +35,29 @@ import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
+import cmpt362.group29.sfudining.cart.CartItem
 import cmpt362.group29.sfudining.cart.CartRepository
+import cmpt362.group29.sfudining.visits.Visit
+import cmpt362.group29.sfudining.visits.VisitItem
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import java.util.Date
+
+fun cartItemsToVisitItems(cartItems: List<CartItem>): List<VisitItem> {
+    return cartItems.map { cartItem ->
+        VisitItem(
+            itemName = cartItem.title,
+            cost = cartItem.price.replace("$", "").toDoubleOrNull(),
+            calories = cartItem.calories,
+            quantity = cartItem.quantity
+        )
+    }
+}
 
 @Composable
 fun RestaurantMap(
     restaurants: List<Restaurant>,
-    onMarkerClick: (Restaurant) -> Unit
+    onMarkerClick: (Restaurant) -> Unit,
+    onCheckInClick: (Visit) -> Unit
 ) {
     val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState {
@@ -120,14 +136,16 @@ fun RestaurantMap(
                     ) {
                         Button(
                             onClick = {
-                                val items = CartRepository.cartItems
-                                if (items.isEmpty()) {
-                                    Log.d("CheckInButton", "Cart is empty")
-                                } else {
-                                    items.forEach { item ->
-                                        Log.d("CheckInButton", "Cart item: ${item.title}, ${item.price}, qty: ${item.quantity}")
-                                    }
-                                }
+                                val visitItems = cartItemsToVisitItems(CartRepository.cartItems)
+                                val visit = Visit(
+                                    restaurantId = restaurant.id,
+                                    restaurantName = restaurant.name,
+                                    items = visitItems,
+                                    totalCost = visitItems.sumOf { it.cost ?: 0.0 },
+                                    totalCal = visitItems.sumOf { it.calories ?: 0 },
+                                    datetime = Date()
+                                )
+                                onCheckInClick(visit)
                             }
                         ) {
                             Text("Check-in")
