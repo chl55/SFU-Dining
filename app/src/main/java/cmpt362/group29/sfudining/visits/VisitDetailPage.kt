@@ -3,7 +3,12 @@ package cmpt362.group29.sfudining.visits
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -12,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import cmpt362.group29.sfudining.auth.AuthRepository
+import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,7 +28,8 @@ fun AddVisitPage(
     modifier: Modifier = Modifier
 ) {
     val userId = AuthRepository().getCurrentUser()?.uid
-    val initialVisit = Visit() // default empty visit
+    val initialVisit = Visit()
+
     VisitForm(
         visit = initialVisit,
         onSave = { visit ->
@@ -60,6 +67,7 @@ fun VisitDetailPage(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisitForm(
     modifier: Modifier = Modifier,
@@ -73,107 +81,150 @@ fun VisitForm(
     var totalCal by remember { mutableStateOf(visit.totalCal?.toString() ?: "") }
     var comments by remember { mutableStateOf(visit.comments ?: "") }
     var date by remember { mutableStateOf(Calendar.getInstance().apply { time = visit.datetime }) }
-
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
-    Scaffold { padding ->
+    val formattedDate by remember(date.time) {
+        mutableStateOf(
+            SimpleDateFormat(
+                "EEE, MMM d • h:mm a",
+                Locale.getDefault()
+            ).format(date.time)
+        )
+    }
+
+    LaunchedEffect(showDatePicker) {
+        if (showDatePicker) {
+            DatePickerDialog(
+                context,
+                { _, year, month, day ->
+                    date.set(Calendar.YEAR, year)
+                    date.set(Calendar.MONTH, month)
+                    date.set(Calendar.DAY_OF_MONTH, day)
+                    showTimePicker = true
+                },
+                date.get(Calendar.YEAR),
+                date.get(Calendar.MONTH),
+                date.get(Calendar.DAY_OF_MONTH)
+            ).show()
+            showDatePicker = false
+        }
+    }
+
+    LaunchedEffect(showTimePicker) {
+        if (showTimePicker) {
+            TimePickerDialog(
+                context,
+                { _, hour, minute ->
+                    date.set(Calendar.HOUR_OF_DAY, hour)
+                    date.set(Calendar.MINUTE, minute)
+                    showTimePicker = false
+                },
+                date.get(Calendar.HOUR_OF_DAY),
+                date.get(Calendar.MINUTE),
+                true
+            ).show()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Visit Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { padding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Text Fields
-            OutlinedTextField(
-                value = restaurantName,
-                onValueChange = { restaurantName = it },
-                label = { Text("Restaurant Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = totalCost,
-                onValueChange = { totalCost = it },
-                label = { Text("Total Cost") },
+            ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
 
-            Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Visit Information",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-            OutlinedTextField(
-                value = totalCal,
-                onValueChange = { totalCal = it },
-                label = { Text("Calories") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
+                    OutlinedTextField(
+                        value = restaurantName,
+                        onValueChange = { restaurantName = it },
+                        label = { Text("Restaurant Name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = totalCost,
+                        onValueChange = { totalCost = it },
+                        label = { Text("Total Cost") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            OutlinedTextField(
-                value = comments,
-                onValueChange = { comments = it },
-                label = { Text("Comments") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                    OutlinedTextField(
+                        value = totalCal,
+                        onValueChange = { totalCal = it },
+                        label = { Text("Calories") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = comments,
+                        onValueChange = { comments = it },
+                        label = { Text("Comments") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            // Date/Time picker
-            Button(onClick = { showDatePicker = true }) {
-                Text("Select Date & Time")
+                    OutlinedTextField(
+                        value = formattedDate,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Date & Time") },
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Default.DateRange, contentDescription = "Pick Date")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
-            if (showDatePicker) {
-                DatePickerDialog(
-                    context,
-                    { _, year, month, day ->
-                        date.set(Calendar.YEAR, year)
-                        date.set(Calendar.MONTH, month)
-                        date.set(Calendar.DAY_OF_MONTH, day)
-                        showTimePicker = true
-                    },
-                    date.get(Calendar.YEAR),
-                    date.get(Calendar.MONTH),
-                    date.get(Calendar.DAY_OF_MONTH)
-                ).show()
-                showDatePicker = false
-            }
-
-            if (showTimePicker) {
-                TimePickerDialog(
-                    context,
-                    { _, hour, minute ->
-                        date.set(Calendar.HOUR_OF_DAY, hour)
-                        date.set(Calendar.MINUTE, minute)
-                        showTimePicker = false
-                    },
-                    date.get(Calendar.HOUR_OF_DAY),
-                    date.get(Calendar.MINUTE),
-                    true
-                ).show()
-            }
-
-            Spacer(Modifier.weight(1f)) // push buttons to bottom
-
-            // Buttons
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(onClick = onBack) { Text("Back") }
+                OutlinedButton(onClick = onBack) {
+                    Text("Cancel")
+                }
 
-                onDelete?.let {
-                    Button(onClick = it) { Text("Delete") }
+                if (onDelete != null) {
+                    OutlinedButton(
+                        onClick = onDelete,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete")
+                    }
                 }
 
                 Button(onClick = {
@@ -185,7 +236,9 @@ fun VisitForm(
                         datetime = date.time
                     )
                     onSave(updatedVisit)
-                }) { Text("Save") }
+                }) {
+                    Text("Save")
+                }
             }
         }
     }

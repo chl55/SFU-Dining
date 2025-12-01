@@ -20,11 +20,9 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import cmpt362.group29.sfudining.auth.AuthActivity
 import cmpt362.group29.sfudining.auth.AuthViewModel
-import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
-import cmpt362.group29.sfudining.ui.components.HomePage
 import cmpt362.group29.sfudining.visits.*
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -49,7 +47,7 @@ fun MainPage() {
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { SFUTopAppBar(scrollBehavior) },
+        topBar = { SFUTopAppBar(scrollBehavior, navController) },
         bottomBar = { SFUNavigationBar(navController) }
     ) { contentPadding ->
         AppNavHost(navController, startDestination, Modifier.padding(contentPadding))
@@ -71,26 +69,31 @@ private fun SFUNavigationBar(navController: NavHostController) {
         val itemColors = NavigationBarItemDefaults.colors(
             selectedIconColor = selectedIconColor,
             unselectedIconColor = unselectedIconColor,
-            selectedTextColor = selectedIconColor,
-            unselectedTextColor = unselectedIconColor,
+            selectedTextColor = selectedTextColor,
+            unselectedTextColor = unselectedTextColor,
             indicatorColor = indicatorColor
         )
 
-        Destination.entries.forEach { destination ->
-            NavigationBarItem(
-                selected = selectedDestination == destination.route,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    }
-                },
-                icon = { Icon(destination.icon, contentDescription = destination.title) },
-                label = { Text(destination.title) },
-                colors = itemColors
-            )
-        }
+        Destination.entries
+            .filter { it != Destination.PROFILE }
+            .forEach { destination ->
+                NavigationBarItem(
+                    selected = selectedDestination == destination.route,
+                    onClick = {
+                        navController.navigate(destination.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                                saveState = true
+                            }
+                        }
+                    },
+                    icon = { Icon(destination.icon, contentDescription = destination.title) },
+                    label = { Text(destination.title) },
+                    colors = itemColors
+                )
+            }
     }
 }
 
@@ -117,25 +120,27 @@ fun AppNavHost(
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> RestaurantNavHost(modifier,"home_page")
-                    Destination.BROWSE -> RestaurantNavHost(modifier,"browse_list")
-                    Destination.MAP -> RestaurantNavHost(modifier,"map")
-                                        Destination.CHECKINS -> {
+                    Destination.HOME -> RestaurantNavHost(modifier, "home_page")
+                    Destination.BROWSE -> RestaurantNavHost(modifier, "browse_list")
+                    Destination.MAP -> RestaurantNavHost(modifier, "map")
+                    Destination.CHECKINS -> {
                         val repository = VisitRepository(FirebaseFirestore.getInstance())
                         val visitViewModel: VisitViewModel = viewModel(
                             factory = VisitViewModelFactory(repository)
                         )
                         VisitPage(modifier, navController, visitViewModel)
                     }
+
                     Destination.PROFILE -> {
                         val userEmail = remember { authViewModel.getUserEmail() }
                         Profile(
-                            email = userEmail ?: "Not logged in", // Pass the email
+                            email = userEmail ?: "Not logged in",
                             onSignOutClick = {
                                 val context = LocalContext.current
                                 authViewModel.signOut()
                                 val intent = Intent(context, AuthActivity::class.java).apply {
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    flags =
+                                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
                                 context.startActivity(intent)
                             }
@@ -189,7 +194,7 @@ fun AppNavHost(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()) {
+fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(), navController: NavHostController) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -200,7 +205,9 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
             Text("SFU Dining")
         },
         actions = {
-            IconButton(onClick = { /* settings */ }) {
+            IconButton(onClick = {
+                navController.navigate(Destination.PROFILE.route)
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Settings",
@@ -211,16 +218,4 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
         scrollBehavior = scrollBehavior
     )
 }
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MainPage()
-}
