@@ -6,24 +6,19 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import cmpt362.group29.sfudining.MainActivity
+import cmpt362.group29.sfudining.ui.theme.OnSFURedContainer
+import cmpt362.group29.sfudining.ui.theme.SFURed
+import cmpt362.group29.sfudining.ui.theme.SFURedContainer
 
 class SignUpActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
@@ -37,7 +32,10 @@ class SignUpActivity : ComponentActivity() {
                 onSubmitClick = {
                     authViewModel.signUp { success, errorMsg ->
                         if (success) {
-                            startActivity(Intent(this, MainActivity::class.java))
+                            val intent = Intent(this, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            startActivity(intent)
                             finish()
                         } else {
                             Toast.makeText(this, errorMsg ?: "Sign up failed", Toast.LENGTH_SHORT).show()
@@ -60,6 +58,7 @@ class SignUpActivity : ComponentActivity() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(SFURed)
                 .padding(32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -67,28 +66,73 @@ class SignUpActivity : ComponentActivity() {
             Text(
                 text = "Sign Up",
                 style = MaterialTheme.typography.headlineLarge,
+                color = SFURedContainer,
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
             OutlinedTextField(
                 value = email,
                 onValueChange = authViewModel::onEmailChange,
-                label = { Text("Email") },
+                label = { Text("Email", color = OnSFURedContainer) },
                 singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = OnSFURedContainer,
+                    unfocusedTextColor = OnSFURedContainer,
+                    disabledTextColor = OnSFURedContainer,
+                    errorTextColor = OnSFURedContainer,
+                    focusedContainerColor = SFURedContainer,
+                    unfocusedContainerColor = SFURedContainer,
+                    disabledContainerColor = SFURedContainer,
+                    errorContainerColor = SFURedContainer,
+                    cursorColor = SFURed,
+                    errorCursorColor = SFURed,
+                    selectionColors = null,
+                    focusedBorderColor = OnSFURedContainer,
+                    unfocusedBorderColor = OnSFURedContainer,
+                    disabledBorderColor = OnSFURedContainer,
+                    errorBorderColor = MaterialTheme.colorScheme.error,
+                    focusedLabelColor = SFURedContainer,
+                    unfocusedLabelColor = SFURedContainer,
+                    disabledLabelColor = OnSFURedContainer,
+                    errorLabelColor = MaterialTheme.colorScheme.error
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                shape = RoundedCornerShape(8.dp)
             )
 
             OutlinedTextField(
                 value = password,
                 onValueChange = authViewModel::onPasswordChange,
-                label = { Text("Password") },
+                label = { Text("Password", color = OnSFURedContainer) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = OnSFURedContainer,
+                    unfocusedTextColor = OnSFURedContainer,
+                    disabledTextColor = OnSFURedContainer,
+                    errorTextColor = OnSFURedContainer,
+                    focusedContainerColor = SFURedContainer,
+                    unfocusedContainerColor = SFURedContainer,
+                    disabledContainerColor = SFURedContainer,
+                    errorContainerColor = SFURedContainer,
+                    cursorColor = SFURed,
+                    errorCursorColor = SFURed,
+                    selectionColors = null,
+                    focusedBorderColor = OnSFURedContainer,
+                    unfocusedBorderColor = OnSFURedContainer,
+                    disabledBorderColor = OnSFURedContainer,
+                    errorBorderColor = MaterialTheme.colorScheme.error,
+                    focusedLabelColor = SFURedContainer,
+                    unfocusedLabelColor = SFURedContainer,
+                    disabledLabelColor = OnSFURedContainer,
+                    errorLabelColor = MaterialTheme.colorScheme.error
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -97,9 +141,10 @@ class SignUpActivity : ComponentActivity() {
                 onClick = onSubmitClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SFURedContainer)
             ) {
-                Text("Submit")
+                Text("Sign Up", color = OnSFURedContainer)
             }
 
             Button(
@@ -107,9 +152,9 @@ class SignUpActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                colors = ButtonDefaults.buttonColors(containerColor = SFURedContainer)
             ) {
-                Text("Back")
+                Text("Back", color = OnSFURedContainer)
             }
         }
     }

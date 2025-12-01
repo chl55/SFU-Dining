@@ -5,18 +5,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.android.gms.maps.model.LatLng
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.cart.CartViewModel
-import com.google.firebase.firestore.GeoPoint
-import kotlinx.coroutines.flow.MutableStateFlow
+import cmpt362.group29.sfudining.ui.components.HomePage
 
 @Composable
-fun RestaurantNavHost() {
+fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
     val navController = rememberNavController()
     val viewModel: RestaurantViewModel = viewModel()
     val cartViewModel: CartViewModel = viewModel()
@@ -24,14 +24,31 @@ fun RestaurantNavHost() {
     LaunchedEffect(Unit) {
         viewModel.getRestaurants()
     }
-    NavHost(navController, "map") {
+    NavHost(navController, startDestination) {
         composable("map") {
             RestaurantMap(restaurants) { restaurant ->
                 navController.navigate("info/${restaurant.id}")
             }
         }
+        composable("browse_list") {
+            BrowsePage(
+                modifier = modifier,
+                onRestaurantClick = { restaurantId ->
+                    navController.navigate("info/$restaurantId")
+                }
+            )
+        }
+        composable("home_page") {
+            HomePage(
+                modifier = modifier,
+                restaurants = restaurants,
+                onRestaurantClick = { restaurantId ->
+                    navController.navigate("info/$restaurantId")
+                }
+            )
+        }
         composable("info/{restaurantId}") {
-            backStackEntry ->
+                backStackEntry ->
             val restId = backStackEntry.arguments?.getString("restaurantId")
             Log.d("NavHost", "Navigating to restaurant ID: $restId")
             LaunchedEffect(restId) {
