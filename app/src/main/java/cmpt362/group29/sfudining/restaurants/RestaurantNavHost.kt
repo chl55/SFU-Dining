@@ -64,7 +64,7 @@ fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
             }
         }
         composable("cart") {
-            CartDetailScreen(cartViewModel) {
+            CartDetailScreen {
                 navController.popBackStack()
             }
         }

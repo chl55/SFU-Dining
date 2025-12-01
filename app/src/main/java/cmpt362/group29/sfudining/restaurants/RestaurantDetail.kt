@@ -1,5 +1,6 @@
 package cmpt362.group29.sfudining.restaurants
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import cmpt362.group29.sfudining.cart.CartItem
@@ -53,7 +55,12 @@ object FeaturedImages {
 }
 
 @Composable
-fun RestaurantDetailScreen(restaurant: Restaurant?, cartViewModel: CartViewModel = viewModel(), navController: NavController, onBack: () -> Unit) {
+fun RestaurantDetailScreen(
+    restaurant: Restaurant?,
+    cartViewModel: CartViewModel = viewModel(),
+    navController: NavController,
+    onBack: () -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -69,11 +76,11 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, cartViewModel: CartViewModel
             RestaurantDesc(restaurant)
             Spacer(modifier = Modifier.height(16.dp))
             restaurant?.featuredItems?.let {
-                FeaturedItems(it, cartViewModel)
+                FeaturedItems(it, cartViewModel, restaurant.name)
             }
             Spacer(modifier = Modifier.height(16.dp))
             restaurant?.menu?.let { menuItems ->
-                MenuItemList(menuItems, cartViewModel)
+                MenuItemList(menuItems, cartViewModel, restaurant.name)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(onBack, Modifier.align(Alignment.Start)) {
@@ -94,6 +101,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, cartViewModel: CartViewModel
         }
     }
 }
+
 @Composable
 fun RestaurantImg() {
     Card(
@@ -126,19 +134,26 @@ fun RestaurantDesc(restaurant: Restaurant?) {
     Spacer(modifier = Modifier.height(16.dp))
     Row(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Phone: ${restaurant?.phoneNum}",
-                style = MaterialTheme.typography.bodySmall)
-            Text("Address: ${restaurant?.address}",
-                style = MaterialTheme.typography.bodySmall)
+            Text(
+                "Phone: ${restaurant?.phoneNum}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                "Address: ${restaurant?.address}",
+                style = MaterialTheme.typography.bodySmall
+            )
 
         }
         Spacer(modifier = Modifier.weight(1f))
-        Column(modifier = Modifier.wrapContentWidth(),
-            horizontalAlignment = Alignment.End) {
-            Text("Schedule:",
-                style = MaterialTheme.typography.bodySmall)
-            restaurant?.schedule?.forEach {
-                (day, hour) ->
+        Column(
+            modifier = Modifier.wrapContentWidth(),
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                "Schedule:",
+                style = MaterialTheme.typography.bodySmall
+            )
+            restaurant?.schedule?.forEach { (day, hour) ->
                 Text(
                     "$day - $hour",
                     style = MaterialTheme.typography.bodySmall
@@ -151,19 +166,20 @@ fun RestaurantDesc(restaurant: Restaurant?) {
 }
 
 @Composable
-fun FeaturedItems(items: List<FeaturedItem>, cartViewModel: CartViewModel) {
+fun FeaturedItems(items: List<FeaturedItem>, cartViewModel: CartViewModel, restaurantName: String) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items(items) { item ->
-            FeaturedItemCard(item, cartViewModel)
+            FeaturedItemCard(item, cartViewModel, restaurantName)
         }
     }
 }
 
 @Composable
-fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel) {
+fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel, restaurantName: String) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.widthIn(min = 200.dp, max = 250.dp),
         shape = RoundedCornerShape(12.dp),
@@ -208,11 +224,18 @@ fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel) {
                     )
                 }
                 IconButton(
-                    onClick = { cartViewModel.addItem(
-                        CartItem(
-                            item.title, item.price, 1
+                    onClick = {
+                        cartViewModel.addItem(
+                            CartItem(
+                                restaurantName, item.title, item.price, 1
+                            )
                         )
-                    )}
+                        Toast.makeText(
+                            context,
+                            "${item.title} (${item.price}) added to cart",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 ) {
                     Icon(
                         Icons.Default.Add,
@@ -227,13 +250,13 @@ fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel) {
 }
 
 @Composable
-fun MenuItemList(items: List<MenuItem>, cartViewModel: CartViewModel) {
+fun MenuItemList(items: List<MenuItem>, cartViewModel: CartViewModel, restaurantName: String) {
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items.forEachIndexed { index, item ->
-            MenuItems(item, cartViewModel)
+            MenuItems(item, cartViewModel, restaurantName)
             if (index < items.size - 1) {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
@@ -246,7 +269,8 @@ fun MenuItemList(items: List<MenuItem>, cartViewModel: CartViewModel) {
 }
 
 @Composable
-fun MenuItems(item: MenuItem, cartViewModel: CartViewModel) {
+fun MenuItems(item: MenuItem, cartViewModel: CartViewModel, restaurantName: String) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -270,11 +294,18 @@ fun MenuItems(item: MenuItem, cartViewModel: CartViewModel) {
             )
         }
         IconButton(
-            onClick = { cartViewModel.addItem(
-                CartItem(
-                    item.title, item.price, 1
+            onClick = {
+                cartViewModel.addItem(
+                    CartItem(
+                        restaurantName, item.title, item.price, 1
+                    )
                 )
-            )}
+                Toast.makeText(
+                    context,
+                    "${item.title} (${item.price}) added to cart",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         ) {
             Icon(
                 Icons.Default.Add,

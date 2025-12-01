@@ -20,6 +20,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import cmpt362.group29.sfudining.auth.AuthActivity
 import cmpt362.group29.sfudining.auth.AuthViewModel
+import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
@@ -189,12 +190,20 @@ fun AppNavHost(
             )
             InsightsPage(visitViewModel, modifier)
         }
+        composable("cart") {
+            CartDetailScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(), navController: NavHostController) {
+fun SFUTopAppBar(
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
+    navController: NavHostController
+) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -211,6 +220,16 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            IconButton(onClick = {
+                navController.navigate("cart")
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.ShoppingCart,
+                    contentDescription = "Cart",
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
