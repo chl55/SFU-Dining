@@ -39,7 +39,7 @@ fun onVisitClick(navController: NavController, visit: Visit) {
 }
 
 fun onAddVisitButtonClick(navController: NavHostController) {
-    navController.navigate("add_visit")
+    navController.navigate("add_visit/new")
 }
 
 @Composable

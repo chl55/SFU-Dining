@@ -59,6 +59,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,5 +72,6 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-    implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
+    implementation("io.github.ehsannarmani:compose-charts:0.2.0")
+    implementation("com.google.code.gson:gson:2.13.2")
 }
