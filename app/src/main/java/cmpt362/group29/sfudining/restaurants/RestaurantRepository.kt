@@ -34,7 +34,8 @@ data class Restaurant(
     val phoneNum: String = "",
     val address: String = "",
     val featuredItems: List<FeaturedItem> = emptyList(),
-    val menu: List<MenuItem> = emptyList()
+    val menu: List<MenuItem> = emptyList(),
+    val restaurantImageURL: String = ""
 )
 
 class RestaurantRepository {

@@ -1,5 +1,6 @@
 package cmpt362.group29.sfudining.restaurants
 
+import coil.compose.rememberAsyncImagePainter
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
@@ -53,7 +54,11 @@ object FeaturedImages {
     val imageMap = mapOf(
         "deal_one" to R.drawable.deal_one,
         "hot_wings" to R.drawable.hot_wings,
-        "pizza_drink" to R.drawable.pizza_drink
+        "pizza_drink" to R.drawable.pizza_drink,
+        "teen_burger" to R.drawable.teen_burger,
+        "root_beer" to R.drawable.root_beer,
+        "spicy_tuna" to R.drawable.spicy_tuna,
+        "veg_tofu" to R.drawable.veg_tofu
     )
 }
 
@@ -69,7 +74,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, cartViewModel: CartViewModel
 
         ) {
             Spacer(modifier = Modifier.height(80.dp))
-            RestaurantImg()
+            RestaurantImg(restaurant)
             Spacer(modifier = Modifier.height(16.dp))
             RestaurantDesc(restaurant)
             Spacer(modifier = Modifier.height(16.dp))
@@ -100,7 +105,7 @@ fun RestaurantDetailScreen(restaurant: Restaurant?, cartViewModel: CartViewModel
     }
 }
 @Composable
-fun RestaurantImg() {
+fun RestaurantImg(restaurant: Restaurant?) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -108,7 +113,7 @@ fun RestaurantImg() {
         shape = RoundedCornerShape(10.dp)
     ) {
         Image(
-            painter = painterResource(R.drawable.uncle_fatih),
+            painter = rememberAsyncImagePainter(restaurant?.restaurantImageURL),
             contentDescription = "Uncle Fatih's Pizza",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
