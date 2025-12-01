@@ -14,21 +14,34 @@ import cmpt362.group29.sfudining.browse.BrowsePage
 import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.cart.CartViewModel
 import cmpt362.group29.sfudining.ui.components.HomePage
+import cmpt362.group29.sfudining.visits.Visit
+import com.google.gson.Gson
 
 @Composable
-fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
+fun RestaurantNavHost(
+    modifier: Modifier,
+    startDestination: String = "map",
+    onNavigateParent: (String) -> Unit
+) {
     val navController = rememberNavController()
     val viewModel: RestaurantViewModel = viewModel()
     val cartViewModel: CartViewModel = viewModel()
     val restaurants by viewModel.restaurants.collectAsState(emptyList())
+    val gson = Gson()
     LaunchedEffect(Unit) {
         viewModel.getRestaurants()
     }
     NavHost(navController, startDestination) {
         composable("map") {
-            RestaurantMap(restaurants) { restaurant ->
-                navController.navigate("info/${restaurant.id}")
-            }
+            RestaurantMap(restaurants,
+                onMarkerClick = { restaurant ->
+                    navController.navigate("info/${restaurant.id}")
+                },
+                onCheckInClick = { visit: Visit? ->
+                    val visitJson = visit?.let { gson.toJson(it) } ?: ""
+                    onNavigateParent("add_visit/$visitJson")
+                }
+            )
         }
         composable("browse_list") {
             BrowsePage(
@@ -47,8 +60,7 @@ fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
                 }
             )
         }
-        composable("info/{restaurantId}") {
-                backStackEntry ->
+        composable("info/{restaurantId}") { backStackEntry ->
             val restId = backStackEntry.arguments?.getString("restaurantId")
             Log.d("NavHost", "Navigating to restaurant ID: $restId")
             LaunchedEffect(restId) {
@@ -64,7 +76,7 @@ fun RestaurantNavHost(modifier: Modifier, startDestination: String = "map") {
             }
         }
         composable("cart") {
-            CartDetailScreen(cartViewModel) {
+            CartDetailScreen {
                 navController.popBackStack()
             }
         }

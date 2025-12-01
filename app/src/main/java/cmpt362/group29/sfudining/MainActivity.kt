@@ -20,11 +20,13 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import cmpt362.group29.sfudining.auth.AuthActivity
 import cmpt362.group29.sfudining.auth.AuthViewModel
+import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.profile.Profile
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.visits.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -120,9 +122,27 @@ fun AppNavHost(
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> RestaurantNavHost(modifier, "home_page")
-                    Destination.BROWSE -> RestaurantNavHost(modifier, "browse_list")
-                    Destination.MAP -> RestaurantNavHost(modifier, "map")
+                    Destination.HOME -> RestaurantNavHost(
+                        modifier = modifier,
+                        startDestination = "home_page",
+                        onNavigateParent = { route ->
+                            navController.navigate(route)
+                        }
+                    )
+                    Destination.MAP -> RestaurantNavHost(
+                        modifier = modifier,
+                        startDestination = "map",
+                        onNavigateParent = { route ->
+                            navController.navigate(route)
+                        }
+                    )
+                    Destination.BROWSE -> RestaurantNavHost(
+                        modifier = modifier,
+                        startDestination = "browse_list",
+                        onNavigateParent = { route ->
+                            navController.navigate(route)
+                        }
+                    )
                     Destination.CHECKINS -> {
                         val repository = VisitRepository(FirebaseFirestore.getInstance())
                         val visitViewModel: VisitViewModel = viewModel(
@@ -149,7 +169,22 @@ fun AppNavHost(
                 }
             }
         }
-        composable("add_visit") { backStackEntry ->
+        composable(
+            route = "add_visit/{visitJson}",
+            arguments = listOf(
+                navArgument("visitJson") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+
+            val visitJson = backStackEntry.arguments?.getString("visitJson")
+            val visit: Visit? =
+                if (visitJson == null || visitJson == "new") null
+                else Gson().fromJson(visitJson, Visit::class.java)
+
             val repository = VisitRepository(FirebaseFirestore.getInstance())
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(Destination.CHECKINS.route)
@@ -158,7 +193,13 @@ fun AppNavHost(
                 viewModelStoreOwner = parentEntry,
                 factory = VisitViewModelFactory(repository)
             )
-            AddVisitPage(visitViewModel, navController, modifier)
+
+            AddVisitPage(
+                viewModel = visitViewModel,
+                navController = navController,
+                modifier = modifier,
+                initialVisit = visit
+            )
         }
         composable(
             "visit_detail/{visitId}",
@@ -189,12 +230,20 @@ fun AppNavHost(
             )
             InsightsPage(visitViewModel, modifier)
         }
+        composable("cart") {
+            CartDetailScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(), navController: NavHostController) {
+fun SFUTopAppBar(
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
+    navController: NavHostController
+) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -211,6 +260,16 @@ fun SFUTopAppBar(scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.ent
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            IconButton(onClick = {
+                navController.navigate("cart")
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.ShoppingCart,
+                    contentDescription = "Cart",
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }

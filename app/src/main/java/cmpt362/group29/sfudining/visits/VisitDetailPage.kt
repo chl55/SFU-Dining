@@ -4,17 +4,18 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import cmpt362.group29.sfudining.auth.AuthRepository
 import java.text.SimpleDateFormat
@@ -25,34 +26,37 @@ import java.util.*
 fun AddVisitPage(
     viewModel: VisitViewModel,
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier,
+    initialVisit: Visit?
 ) {
     val userId = AuthRepository().getCurrentUser()?.uid
-    val initialVisit = Visit()
+    val visit = initialVisit ?: Visit(
+        datetime = Date()
+    )
 
     VisitForm(
-        visit = initialVisit,
+        modifier = modifier,
+        visit = visit,
         onSave = { visit ->
             userId?.let { viewModel.addVisit(it, visit) }
             navController.popBackStack()
         },
         onDelete = null,
-        onBack = { navController.popBackStack() },
-        modifier = modifier
+        onBack = { navController.popBackStack() }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisitDetailPage(
     visit: Visit,
     viewModel: VisitViewModel,
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier : Modifier
 ) {
     val userId = AuthRepository().getCurrentUser()?.uid
 
     VisitForm(
+        modifier = modifier,
         visit = visit,
         onSave = { updatedVisit ->
             userId?.let { viewModel.editVisit(it, updatedVisit) }
@@ -62,19 +66,18 @@ fun VisitDetailPage(
             userId?.let { viewModel.deleteVisit(it, visit.id!!) }
             navController.popBackStack()
         },
-        onBack = { navController.popBackStack() },
-        modifier = modifier
+        onBack = { navController.popBackStack() }
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisitForm(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     visit: Visit,
     onSave: (Visit) -> Unit,
     onDelete: (() -> Unit)? = null,
-    onBack: () -> Unit,
+    onBack: () -> Unit
 ) {
     var restaurantName by remember { mutableStateOf(visit.restaurantName) }
     var totalCost by remember { mutableStateOf(visit.totalCost?.toString() ?: "") }
@@ -85,14 +88,24 @@ fun VisitForm(
     var showTimePicker by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val visitItems = remember { mutableStateListOf<VisitItem>().apply { addAll(visit.items) } }
+
+    val itemsTotalCost by derivedStateOf { visitItems.sumOf { (it.cost ?: 0.0) * it.quantity } }
+    val itemsTotalCal by derivedStateOf { visitItems.sumOf { (it.calories ?: 0) * it.quantity } }
+
+    var manualCostOverride by remember { mutableStateOf(totalCost.isNotBlank() && visitItems.isEmpty()) }
+    var manualCalOverride by remember { mutableStateOf(totalCal.isNotBlank() && visitItems.isEmpty()) }
+
+    LaunchedEffect(itemsTotalCost) {
+        if (!manualCostOverride && visitItems.isNotEmpty()) totalCost = itemsTotalCost.toString()
+    }
+
+    LaunchedEffect(itemsTotalCal) {
+        if (!manualCalOverride && visitItems.isNotEmpty()) totalCal = itemsTotalCal.toString()
+    }
 
     val formattedDate by remember(date.time) {
-        mutableStateOf(
-            SimpleDateFormat(
-                "EEE, MMM d • h:mm a",
-                Locale.getDefault()
-            ).format(date.time)
-        )
+        mutableStateOf(SimpleDateFormat("EEE, MMM d • h:mm a", Locale.getDefault()).format(date.time))
     }
 
     LaunchedEffect(showDatePicker) {
@@ -129,39 +142,17 @@ fun VisitForm(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Visit Details") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold {
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(padding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-
-                    Text(
-                        text = "Visit Information",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+            ElevatedCard(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Visit Information", style = MaterialTheme.typography.titleMedium)
 
                     OutlinedTextField(
                         value = restaurantName,
@@ -172,7 +163,10 @@ fun VisitForm(
 
                     OutlinedTextField(
                         value = totalCost,
-                        onValueChange = { totalCost = it },
+                        onValueChange = {
+                            totalCost = it
+                            manualCostOverride = true
+                        },
                         label = { Text("Total Cost") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
@@ -180,7 +174,10 @@ fun VisitForm(
 
                     OutlinedTextField(
                         value = totalCal,
-                        onValueChange = { totalCal = it },
+                        onValueChange = {
+                            totalCal = it
+                            manualCalOverride = true
+                        },
                         label = { Text("Calories") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
@@ -208,36 +205,131 @@ fun VisitForm(
                 }
             }
 
+            Text("Ordered Items", style = MaterialTheme.typography.titleMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                visitItems.forEachIndexed { index, item ->
+                    VisitItemRow(
+                        item = item,
+                        onUpdate = { updated ->
+                            visitItems[index] = updated
+                        },
+                        onRemove = { visitItems.removeAt(index) }
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { visitItems.add(VisitItem(itemName = "", cost = 0.0, calories = 0, quantity = 1)) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Item")
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add Item")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                OutlinedButton(onClick = onBack) {
-                    Text("Cancel")
-                }
-
+                OutlinedButton(onClick = onBack) { Text("Cancel") }
                 if (onDelete != null) {
                     OutlinedButton(
                         onClick = onDelete,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Delete")
-                    }
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) { Text("Delete") }
                 }
-
                 Button(onClick = {
                     val updatedVisit = visit.copy(
                         restaurantName = restaurantName,
+                        items = visitItems.toList(),
                         totalCost = totalCost.toDoubleOrNull(),
                         totalCal = totalCal.toIntOrNull(),
                         comments = comments,
                         datetime = date.time
                     )
                     onSave(updatedVisit)
-                }) {
-                    Text("Save")
+                }) { Text("Save") }
+            }
+        }
+    }
+}
+
+@Composable
+fun VisitItemRow(
+    item: VisitItem,
+    onUpdate: (VisitItem) -> Unit,
+    onRemove: () -> Unit
+) {
+    var name by remember { mutableStateOf(item.itemName) }
+    var cost by remember { mutableStateOf(item.cost?.toString() ?: "0") }
+    var calories by remember { mutableStateOf(item.calories?.toString() ?: "0") }
+    var quantity by remember { mutableStateOf(item.quantity) }
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                    },
+                    label = { Text("Item Name") },
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = cost,
+                    onValueChange = {
+                        cost = it
+                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                    },
+                    label = { Text("Cost") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
+
+                OutlinedTextField(
+                    value = calories,
+                    onValueChange = {
+                        calories = it
+                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                    },
+                    label = { Text("Calories") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(
+                        onClick = {
+                            if (quantity > 1) quantity -= 1
+                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                        },
+                        modifier = Modifier.size(28.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) { Text("−", fontSize = 16.sp) }
+
+                    Text(quantity.toString(), fontSize = 16.sp, modifier = Modifier.padding(horizontal = 4.dp))
+
+                    TextButton(
+                        onClick = {
+                            quantity += 1
+                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                        },
+                        modifier = Modifier.size(28.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) { Text("+", fontSize = 16.sp) }
                 }
             }
         }

@@ -5,6 +5,7 @@ import java.util.Date
 data class VisitItem(
     val id: String? = null,
     val itemId: String = "",
+    val quantity: Int = 0,
     val itemName: String = "",
     val cost: Double? = null,
     val calories: Int? = null

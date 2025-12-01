@@ -1,5 +1,7 @@
 package cmpt362.group29.sfudining.restaurants
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,39 +30,99 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import cmpt362.group29.sfudining.cart.CartItem
+import cmpt362.group29.sfudining.cart.CartRepository
+import cmpt362.group29.sfudining.visits.Visit
+import cmpt362.group29.sfudining.visits.VisitItem
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import java.util.Date
+
+fun cartItemsToVisitItems(cartItems: List<CartItem>): List<VisitItem> {
+    return cartItems.map { cartItem ->
+        VisitItem(
+            itemName = cartItem.title,
+            cost = cartItem.price.replace("$", "").toDoubleOrNull(),
+            calories = cartItem.calories,
+            quantity = cartItem.quantity
+        )
+    }
+}
 
 @Composable
 fun RestaurantMap(
     restaurants: List<Restaurant>,
-    onMarkerClick: (Restaurant) -> Unit
+    onMarkerClick: (Restaurant) -> Unit,
+    onCheckInClick: (Visit) -> Unit
 ) {
+    val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(49.2781, -122.9199), 15f)
     }
     var selectedRestaurant by remember { mutableStateOf<Restaurant?>(null) }
 
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasLocationPermission = granted
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
-            modifier = Modifier.fillMaxSize(), cameraPositionState = cameraPositionState, properties = MapProperties(
-                mapType = MapType.TERRAIN)
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(
+                mapType = MapType.NORMAL,
+                isMyLocationEnabled = hasLocationPermission
+            )
         ) {
             for (restaurant in restaurants) {
                 Log.d("ViewModel", "Fetched restaurant: ${restaurant.name}")
-                Marker(state = MarkerState(
-                    position = LatLng(
-                        restaurant.location.latitude,
-                        restaurant.location.longitude
-                    )
-                ), title = restaurant.name,
+                Marker(
+                    state = MarkerState(
+                        position = LatLng(
+                            restaurant.location.latitude,
+                            restaurant.location.longitude
+                        )
+                    ),
+                    title = restaurant.name,
+                    icon = when {
+                        RestaurantUtils.isOpenNow(restaurant.schedule) && RestaurantUtils.closesWithinAnHour(restaurant.schedule) ->
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
+                        RestaurantUtils.isOpenNow(restaurant.schedule) ->
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                        else ->
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    },
                     onClick = {
                         selectedRestaurant = restaurant
                         true
-                    })
+                    }
+                )
 
             }
         }
-        selectedRestaurant?.let {
-            restaurant ->
+
+        selectedRestaurant?.let { restaurant ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
@@ -72,8 +134,24 @@ fun RestaurantMap(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Button(
+                            onClick = {
+                                val visitItems = cartItemsToVisitItems(CartRepository.cartItems)
+                                val visit = Visit(
+                                    restaurantId = restaurant.id,
+                                    restaurantName = restaurant.name,
+                                    items = visitItems,
+                                    totalCost = visitItems.sumOf { it.cost ?: 0.0 },
+                                    totalCal = visitItems.sumOf { it.calories ?: 0 },
+                                    datetime = Date()
+                                )
+                                onCheckInClick(visit)
+                            }
+                        ) {
+                            Text("Check-in")
+                        }
                         Button(onClick = { onMarkerClick(restaurant) }) {
-                            Text("See Details")
+                            Text("Restaurant Details")
                         }
                         Button(onClick = { selectedRestaurant = null }) {
                             Text("Close")
