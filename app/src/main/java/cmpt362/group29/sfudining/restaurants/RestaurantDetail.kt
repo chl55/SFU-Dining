@@ -1,9 +1,12 @@
 package cmpt362.group29.sfudining.restaurants
 
+import android.content.Intent
+import android.net.Uri
 import coil.compose.rememberAsyncImagePainter
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
@@ -38,15 +43,22 @@ import cmpt362.group29.sfudining.R
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import cmpt362.group29.sfudining.cart.CartItem
+import cmpt362.group29.sfudining.cart.CartRepository
 import cmpt362.group29.sfudining.cart.CartViewModel
+import cmpt362.group29.sfudining.restaurants.RestaurantUtils.OpeningStatusBadge
+import cmpt362.group29.sfudining.visits.Visit
+import java.util.Date
 
 
 @Composable
@@ -54,6 +66,7 @@ fun RestaurantDetailScreen(
     restaurant: Restaurant?,
     cartViewModel: CartViewModel = viewModel(),
     navController: NavController,
+    onCheckInClick: (Visit) -> Unit,
     onBack: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -68,7 +81,7 @@ fun RestaurantDetailScreen(
             Spacer(modifier = Modifier.height(80.dp))
             RestaurantImg(restaurant)
             Spacer(modifier = Modifier.height(16.dp))
-            RestaurantDesc(restaurant)
+            RestaurantDesc(restaurant, onCheckInClick)
             Spacer(modifier = Modifier.height(16.dp))
             restaurant?.featuredItems?.let {
                 FeaturedItems(it, cartViewModel, restaurant.name)
@@ -102,7 +115,7 @@ fun RestaurantImg(restaurant: Restaurant?) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp),
+            .height(200.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
         Image(
@@ -117,47 +130,123 @@ fun RestaurantImg(restaurant: Restaurant?) {
 }
 
 @Composable
-fun RestaurantDesc(restaurant: Restaurant?) {
-    Text(
-        text = restaurant?.name ?: "Unknown Restaurant",
-        style = MaterialTheme.typography.headlineMedium
-    )
-    Text(
-        text = restaurant?.cuisine ?: "Unknown Cuisine",
-        style = MaterialTheme.typography.bodyMedium
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                "Phone: ${restaurant?.phone}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                "Address: ${restaurant?.address}",
-                style = MaterialTheme.typography.bodySmall
-            )
+fun RestaurantDesc(
+    restaurant: Restaurant?,
+    onCheckInClick: (Visit) -> Unit
+) {
+    val context = LocalContext.current
 
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Column(
-            modifier = Modifier.wrapContentWidth(),
-            horizontalAlignment = Alignment.End
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+    ) {
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                "Schedule:",
-                style = MaterialTheme.typography.bodySmall
+                text = restaurant?.name ?: "Unknown Restaurant",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
-            restaurant?.schedule?.forEach { (day, hour) ->
-                Text(
-                    "$day - $hour",
-                    style = MaterialTheme.typography.bodySmall
-                )
 
+            Spacer(modifier = Modifier.width(8.dp))
+
+            restaurant?.schedule?.let {
+                OpeningStatusBadge(schedule = it)
             }
         }
+
+        Text(
+            text = restaurant?.cuisine ?: "Unknown Cuisine",
+            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Phone: ${restaurant?.phone ?: "N/A"}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    "Address: ${restaurant?.address ?: "N/A"}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                restaurant?.website?.let { website ->
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(website))
+                            context.startActivity(intent)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = website,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        val visitItems = cartItemsToVisitItems(
+                            CartRepository.cartItems.filter {
+                                it.restaurantName == restaurant?.name
+                            }
+                        )
+
+                        val visit = Visit(
+                            restaurantId = restaurant?.id ?: "",
+                            restaurantName = restaurant?.name ?: "",
+                            items = visitItems,
+                            totalCost = visitItems.sumOf { it.cost ?: 0.0 },
+                            totalCal = visitItems.sumOf { it.calories ?: 0 },
+                            datetime = Date()
+                        )
+                        onCheckInClick(visit)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Check-in")
+                }
+            }
+
+            Spacer(modifier = Modifier.width(32.dp))
+
+            Column(
+                modifier = Modifier.wrapContentWidth(),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    "Schedule:",
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+                restaurant?.schedule?.forEach { (day, hour) ->
+                    Text(
+                        "$day - $hour",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
-    Spacer(modifier = Modifier.height(30.dp))
 }
 
 @Composable
@@ -210,7 +299,7 @@ fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel, restauran
                         fontWeight = FontWeight.Normal
                     )
                     Text(
-                        text = item.price,
+                        text = "${item.price} • ${item.kcal} kcal",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
@@ -220,12 +309,12 @@ fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel, restauran
                     onClick = {
                         cartViewModel.addItem(
                             CartItem(
-                                restaurantName, item.title, item.price, 1
+                                restaurantName, item.title, item.price, item.kcal.toInt(), 1
                             )
                         )
                         Toast.makeText(
                             context,
-                            "${item.title} (${item.price}) added to cart",
+                            "${item.title} (${item.price}, ${item.kcal} kcal) added to cart",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -237,7 +326,6 @@ fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel, restauran
                     )
                 }
             }
-
         }
     }
 }
@@ -279,8 +367,9 @@ fun MenuItems(item: MenuItem, cartViewModel: CartViewModel, restaurantName: Stri
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Normal
             )
+
             Text(
-                text = item.price,
+                text = "${item.price} • ${item.kcal} kcal",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
@@ -290,12 +379,12 @@ fun MenuItems(item: MenuItem, cartViewModel: CartViewModel, restaurantName: Stri
             onClick = {
                 cartViewModel.addItem(
                     CartItem(
-                        restaurantName, item.title, item.price, 1
+                        restaurantName, item.title, item.price, item.kcal.toInt(), 1
                     )
                 )
                 Toast.makeText(
                     context,
-                    "${item.title} (${item.price}) added to cart",
+                    "${item.title} (${item.price}, ${item.kcal} kcal) added to cart",
                     Toast.LENGTH_SHORT
                 ).show()
             }
