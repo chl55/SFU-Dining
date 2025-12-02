@@ -24,7 +24,6 @@ import cmpt362.group29.sfudining.restaurants.Restaurant
 import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.text.clear
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +62,7 @@ fun VisitDetailPage(
     visit: Visit,
     viewModel: VisitViewModel,
     navController: NavHostController,
-    modifier : Modifier
+    modifier: Modifier
 ) {
     val userId = AuthRepository().getCurrentUser()?.uid
 
@@ -132,8 +131,20 @@ fun VisitForm(
         items
     }
 
-    val itemsTotalCost by remember { derivedStateOf { visitItems.sumOf { (it.cost ?: 0.0) * it.quantity } } }
-    val itemsTotalCal by remember { derivedStateOf { visitItems.sumOf { (it.calories ?: 0) * it.quantity } } }
+    val itemsTotalCost by remember {
+        derivedStateOf {
+            visitItems.sumOf {
+                (it.cost ?: 0.0) * it.quantity
+            }
+        }
+    }
+    val itemsTotalCal by remember {
+        derivedStateOf {
+            visitItems.sumOf {
+                (it.calories ?: 0) * it.quantity
+            }
+        }
+    }
 
     var manualCostOverride by remember { mutableStateOf(totalCost.isNotBlank() && visitItems.isEmpty()) }
     var manualCalOverride by remember { mutableStateOf(totalCal.isNotBlank() && visitItems.isEmpty()) }
@@ -147,7 +158,12 @@ fun VisitForm(
     }
 
     val formattedDate by remember(date.time) {
-        mutableStateOf(SimpleDateFormat("EEE, MMM d • h:mm a", Locale.getDefault()).format(date.time))
+        mutableStateOf(
+            SimpleDateFormat(
+                "EEE, MMM d • h:mm a",
+                Locale.getDefault()
+            ).format(date.time)
+        )
     }
 
     LaunchedEffect(showDatePicker) {
@@ -192,7 +208,10 @@ fun VisitForm(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ElevatedCard(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text("Visit Information", style = MaterialTheme.typography.titleMedium)
 
@@ -209,7 +228,9 @@ fun VisitForm(
                             label = { Text("Restaurant Name") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRestaurantField) },
                             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
                         )
                         ExposedDropdownMenu(
                             expanded = expandedRestaurantField,
@@ -235,8 +256,13 @@ fun VisitForm(
                         }
                     }
 
+                    val displayCost =
+                        if (!manualCostOverride && totalCost.isNotBlank())
+                            "%.2f".format(totalCost.toDoubleOrNull() ?: 0.0)
+                        else
+                            totalCost
                     OutlinedTextField(
-                        value = totalCost,
+                        value = displayCost,
                         onValueChange = {
                             totalCost = it
                             manualCostOverride = true
@@ -293,7 +319,16 @@ fun VisitForm(
                 }
 
                 OutlinedButton(
-                    onClick = { visitItems.add(VisitItem(itemName = "", cost = 0.0, calories = 0, quantity = 1)) },
+                    onClick = {
+                        visitItems.add(
+                            VisitItem(
+                                itemName = "",
+                                cost = 0.0,
+                                calories = 0,
+                                quantity = 1
+                            )
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Item")
@@ -360,7 +395,14 @@ fun VisitItemRow(
                         value = name,
                         onValueChange = {
                             name = it
-                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                            onUpdate(
+                                item.copy(
+                                    itemName = name,
+                                    cost = cost.toDoubleOrNull(),
+                                    calories = calories.toIntOrNull(),
+                                    quantity = quantity
+                                )
+                            )
                         },
                         label = { Text("Item Name") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -385,7 +427,14 @@ fun VisitItemRow(
                                             calories = details.second.toString()
                                         }
                                         expanded = false
-                                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                                        onUpdate(
+                                            item.copy(
+                                                itemName = name,
+                                                cost = cost.toDoubleOrNull(),
+                                                calories = calories.toIntOrNull(),
+                                                quantity = quantity
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -393,16 +442,30 @@ fun VisitItemRow(
                     }
                 }
                 IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = MaterialTheme.colorScheme.error)
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Remove Item",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = cost,
                     onValueChange = {
                         cost = it
-                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                        onUpdate(
+                            item.copy(
+                                itemName = name,
+                                cost = cost.toDoubleOrNull(),
+                                calories = calories.toIntOrNull(),
+                                quantity = quantity
+                            )
+                        )
                     },
                     label = { Text("Cost") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -413,7 +476,14 @@ fun VisitItemRow(
                     value = calories,
                     onValueChange = {
                         calories = it
-                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                        onUpdate(
+                            item.copy(
+                                itemName = name,
+                                cost = cost.toDoubleOrNull(),
+                                calories = calories.toIntOrNull(),
+                                quantity = quantity
+                            )
+                        )
                     },
                     label = { Text("Calories") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -424,18 +494,36 @@ fun VisitItemRow(
                     TextButton(
                         onClick = {
                             if (quantity > 1) quantity -= 1
-                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                            onUpdate(
+                                item.copy(
+                                    itemName = name,
+                                    cost = cost.toDoubleOrNull(),
+                                    calories = calories.toIntOrNull(),
+                                    quantity = quantity
+                                )
+                            )
                         },
                         modifier = Modifier.size(28.dp),
                         contentPadding = PaddingValues(0.dp)
                     ) { Text("−", fontSize = 16.sp) }
 
-                    Text(quantity.toString(), fontSize = 16.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                    Text(
+                        quantity.toString(),
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
 
                     TextButton(
                         onClick = {
                             quantity += 1
-                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                            onUpdate(
+                                item.copy(
+                                    itemName = name,
+                                    cost = cost.toDoubleOrNull(),
+                                    calories = calories.toIntOrNull(),
+                                    quantity = quantity
+                                )
+                            )
                         },
                         modifier = Modifier.size(28.dp),
                         contentPadding = PaddingValues(0.dp)

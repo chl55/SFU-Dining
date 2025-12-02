@@ -35,7 +35,8 @@ fun RestaurantNavHost(
     }
     NavHost(navController, startDestination) {
         composable("map") {
-            RestaurantMap(restaurants,
+            RestaurantMap(
+                restaurants,
                 onMarkerClick = { restaurant ->
                     navController.navigate("info/${restaurant.id}")
                 },
@@ -74,7 +75,14 @@ fun RestaurantNavHost(
             }
             val restaurant by viewModel.restaurant.collectAsState()
             restaurant?.let { restaurantData ->
-                RestaurantDetailScreen(restaurantData, cartViewModel, navController) {
+                RestaurantDetailScreen(
+                    restaurantData,
+                    cartViewModel,
+                    navController,
+                    onCheckInClick = { visit: Visit? ->
+                        val visitJson = visit?.let { gson.toJson(it) } ?: ""
+                        onNavigateParent("add_visit/$visitJson")
+                    }) {
                     navController.popBackStack()
                 }
             }

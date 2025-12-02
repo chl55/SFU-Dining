@@ -112,7 +112,6 @@ fun RestaurantMap(
             )
         ) {
             restaurants.forEach { restaurant ->
-                Log.d("ViewModel", "Fetched restaurant: ${restaurant.name}")
                 Marker(
                     state = MarkerState(
                         position = LatLng(
@@ -121,14 +120,16 @@ fun RestaurantMap(
                         )
                     ),
                     title = restaurant.name,
-                    icon = when {
-                        RestaurantUtils.isOpenNow(restaurant.schedule) && RestaurantUtils.closesWithinAnHour(restaurant.schedule) ->
+                    icon =
+                        if (selectedRestaurant?.id == restaurant.id)
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+                        else if (RestaurantUtils.isOpenNow(restaurant.schedule) &&
+                            RestaurantUtils.closesWithinAnHour(restaurant.schedule))
                             BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
-                        RestaurantUtils.isOpenNow(restaurant.schedule) ->
+                        else if (RestaurantUtils.isOpenNow(restaurant.schedule))
                             BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-                        else ->
-                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-                    },
+                        else
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
                     onClick = {
                         selectedRestaurant = restaurant
                         true
@@ -162,13 +163,13 @@ fun RestaurantMap(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = restaurant.name,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
 
                         OpeningStatusBadge(restaurant.schedule)
