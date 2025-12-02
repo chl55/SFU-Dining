@@ -27,20 +27,30 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 object RestaurantUtils {
+    fun parsePriceRange(range: String): Pair<Int, Int>? {
+        // "$12-$20" → (12, 20)
+        return range
+            .replace("$", "")
+            .split("-")
+            .takeIf { it.size == 2 }
+            ?.mapNotNull { it.toIntOrNull() }
+            ?.let { Pair(it[0], it[1]) }
+    }
+
     @Composable
     fun OpeningStatusBadge(schedule: List<OpeningHours>) {
         val isOpen = isOpenNow(schedule)
         val closingSoon = closesWithinAnHour(schedule)
 
         val (label, color) = when {
-            isOpen && closingSoon -> "Closing Soon" to Color(0xFFFFC107)
+            isOpen && closingSoon -> "Closing Soon" to Color(0xFFFF5722)
             isOpen -> "Open Now" to Color(0xFF4CAF50)
-            else -> "Closed" to Color(0xFFF44336)
+            else -> "Closed" to Color(0xFFE91E1E)
         }
 
         Box(
             modifier = Modifier
-                .background(color.copy(alpha = 0.15f), shape = RoundedCornerShape(50))
+                .background(color.copy(alpha = 0.25f), shape = RoundedCornerShape(50))
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(label, color = color, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
@@ -66,7 +76,7 @@ object RestaurantUtils {
 
         val fused: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
 
-        val userLocation = suspendCancellableCoroutine<Location?> { cont ->
+        val userLocation = suspendCancellableCoroutine { cont ->
             fused.lastLocation.addOnSuccessListener { cont.resume(it) }
                 .addOnFailureListener { cont.resume(null) }
         }
@@ -98,6 +108,7 @@ object RestaurantUtils {
         schedule.forEach { entry ->
             if (!entry.day.equals(currentDay, ignoreCase = true)) return@forEach
             if (entry.hours.equals("Closed", ignoreCase = true)) return false
+            if (entry.hours.equals("Open 24 Hours", ignoreCase = true)) return true
 
             val times = entry.hours.split("–", "-").map { it.trim() }
             if (times.size != 2) return false
@@ -138,6 +149,7 @@ object RestaurantUtils {
 
         schedule.forEach { entry ->
             if (!entry.day.equals(currentDay, ignoreCase = true)) return@forEach
+            if (entry.hours.equals("Open 24 Hours", ignoreCase = true)) return false
             if (entry.hours.equals("Closed", ignoreCase = true)) return false
 
             val times = entry.hours.split("–", "-").map { it.trim() }
