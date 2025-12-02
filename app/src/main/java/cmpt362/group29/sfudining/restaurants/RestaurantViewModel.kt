@@ -2,9 +2,11 @@ package cmpt362.group29.sfudining.restaurants
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cmpt362.group29.sfudining.visits.Visit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.location.Location
 
 class RestaurantViewModel(
     private val repository: RestaurantRepository = RestaurantRepository()
@@ -16,6 +18,27 @@ class RestaurantViewModel(
     private val _restaurant = MutableStateFlow<Restaurant?>(null)
     val restaurant: StateFlow<Restaurant?> = _restaurant
 
+    private val _nearbyRestaurants = MutableStateFlow<List<Restaurant>>(emptyList())
+    val nearbyRestaurants: StateFlow<List<Restaurant>> = _nearbyRestaurants
+
+    private val _recommendedRestaurants = MutableStateFlow<List<Restaurant>>(emptyList())
+    val recommendedRestaurants: StateFlow<List<Restaurant>> = _recommendedRestaurants
+
+    private val recommendsUtils = RecommendsUtils()
+
+    fun updateLocation(location: Location?) {
+        val currentList = _restaurants.value
+        if (currentList.isNotEmpty() && location != null) {
+            _nearbyRestaurants.value = recommendsUtils.recommendByLocation(location, currentList).take(5)
+        }
+    }
+
+    fun generateUserRecommendations(visits: List<Visit>) {
+        val currentRestaurants = _restaurants.value
+        if (currentRestaurants.isNotEmpty() && visits.isNotEmpty()) {
+            _recommendedRestaurants.value = recommendsUtils.recommendByHistory(visits, currentRestaurants)
+        }
+    }
     fun getRestaurants() {
         viewModelScope.launch {
             _restaurants.value = repository.getRestaurants()
