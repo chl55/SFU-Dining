@@ -54,7 +54,6 @@ fun RestaurantNavHost(
         composable("home_page") {
             HomePage(
                 modifier = modifier,
-                restaurants = restaurants,
                 onRestaurantClick = { restaurantId ->
                     navController.navigate("info/$restaurantId")
                 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.location.Location
+import android.util.Log
 
 class RestaurantViewModel(
     private val repository: RestaurantRepository = RestaurantRepository()
@@ -29,7 +30,7 @@ class RestaurantViewModel(
     fun updateLocation(location: Location?) {
         val currentList = _restaurants.value
         if (currentList.isNotEmpty() && location != null) {
-            _nearbyRestaurants.value = recommendsUtils.recommendByLocation(location, currentList).take(5)
+            _nearbyRestaurants.value = recommendsUtils.recommendByLocation(location, currentList).take(3)
         }
     }
 
@@ -37,8 +38,11 @@ class RestaurantViewModel(
         val currentRestaurants = _restaurants.value
         if (currentRestaurants.isNotEmpty() && visits.isNotEmpty()) {
             _recommendedRestaurants.value = recommendsUtils.recommendByHistory(visits, currentRestaurants)
+        } else {
+            Log.d("Homepage generate user recommends", "${currentRestaurants.isNotEmpty()} ${visits.isNotEmpty()}")
         }
     }
+
     fun getRestaurants() {
         viewModelScope.launch {
             _restaurants.value = repository.getRestaurants()

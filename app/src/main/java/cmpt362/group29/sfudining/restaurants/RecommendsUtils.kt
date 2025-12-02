@@ -1,6 +1,7 @@
 package cmpt362.group29.sfudining.restaurants
 
 import android.location.Location
+import android.util.Log
 import cmpt362.group29.sfudining.visits.Visit
 import com.google.firebase.firestore.GeoPoint
 
@@ -14,16 +15,16 @@ class RecommendsUtils {
 
     /// Sort restaurants by distance from user
     fun recommendByLocation(
-        userLocation: android.location.Location?,
+        userLocation: Location?,
         restaurants: List<Restaurant>
     ): List<Restaurant> {
         if (userLocation == null) return emptyList()
 
         val userGeo = GeoPoint(userLocation.latitude, userLocation.longitude)
-
-        return restaurants.sortedBy { restaurant ->
+        val results = restaurants.sortedBy { restaurant ->
             getDistance(userGeo, restaurant.location)
         }
+        return results
     }
 
     // -- History-based recommendations -- //
