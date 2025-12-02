@@ -284,6 +284,7 @@ fun VisitForm(
                 visitItems.forEachIndexed { index, item ->
                     VisitItemRow(
                         item = item,
+                        availableItems = availableItems,
                         onUpdate = { updated ->
                             visitItems[index] = updated
                         },
@@ -330,9 +331,11 @@ fun VisitForm(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisitItemRow(
     item: VisitItem,
+    availableItems: Map<String, Pair<Double, Int>>,
     onUpdate: (VisitItem) -> Unit,
     onRemove: () -> Unit
 ) {
@@ -340,6 +343,7 @@ fun VisitItemRow(
     var cost by remember { mutableStateOf(item.cost?.toString() ?: "0") }
     var calories by remember { mutableStateOf(item.calories?.toString() ?: "0") }
     var quantity by remember { mutableStateOf(item.quantity) }
+    var expanded by remember { mutableStateOf(false) }
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -347,15 +351,47 @@ fun VisitItemRow(
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
-                    },
-                    label = { Text("Item Name") },
-                    modifier = Modifier.weight(1f)
-                )
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                        },
+                        label = { Text("Item Name") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier.menuAnchor()
+                    )
+
+                    // Display available items for selected restaurant, update cost and calories based on item
+                    if (availableItems.isNotEmpty()) {
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            availableItems.keys.forEach { itemName ->
+                                DropdownMenuItem(
+                                    text = { Text(itemName) },
+                                    onClick = {
+                                        name = itemName
+                                        val details = availableItems[itemName]
+                                        if (details != null) {
+                                            cost = details.first.toString()
+                                            calories = details.second.toString()
+                                        }
+                                        expanded = false
+                                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
                 IconButton(onClick = onRemove) {
                     Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = MaterialTheme.colorScheme.error)
                 }
