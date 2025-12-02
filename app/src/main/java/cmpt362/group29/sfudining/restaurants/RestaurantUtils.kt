@@ -28,7 +28,6 @@ import kotlin.coroutines.resume
 
 object RestaurantUtils {
     fun parsePriceRange(range: String): Pair<Int, Int>? {
-        // "$12-$20" → (12, 20)
         return range
             .replace("$", "")
             .split("-")

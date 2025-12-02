@@ -18,11 +18,8 @@ class VisitViewModel(private val repository: VisitRepository) : ViewModel() {
     }
 
     fun addVisit(userId: String, visit: Visit) {
-        repository.addVisit(userId, visit) { success ->
-            if (success) {
-                _visits.value += visit
-            }
-        }
+        // No need to manually update _visits; rely on Firestore snapshot updates
+        repository.addVisit(userId, visit)
     }
 
     fun editVisit(userId: String, visit: Visit) {

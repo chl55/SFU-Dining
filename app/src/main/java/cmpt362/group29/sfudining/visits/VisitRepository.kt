@@ -49,7 +49,7 @@ class VisitRepository(private val db: FirebaseFirestore) {
             }
     }
 
-    fun addVisit(userId: String, visit: Visit, onResult: (Boolean) -> Unit) {
+    fun addVisit(userId: String, visit: Visit) {
         val visitsCollection = usersCollection
             .document(userId)
             .collection("visits")
@@ -72,10 +72,7 @@ class VisitRepository(private val db: FirebaseFirestore) {
                     batch.set(itemRef, item)
                 }
                 batch.commit()
-                    .addOnSuccessListener { onResult(true) }
-                    .addOnFailureListener { onResult(false) }
             }
-            .addOnFailureListener { onResult(false) }
     }
 
     fun editVisit(userId: String, visit: Visit, onResult: (Boolean) -> Unit) {
