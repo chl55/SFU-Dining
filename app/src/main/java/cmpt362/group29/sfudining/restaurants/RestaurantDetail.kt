@@ -48,19 +48,6 @@ import androidx.navigation.NavController
 import cmpt362.group29.sfudining.cart.CartItem
 import cmpt362.group29.sfudining.cart.CartViewModel
 
-object FeaturedImages {
-    val imageMap = mapOf(
-        "deal_one" to R.drawable.deal_one,
-        "hot_wings" to R.drawable.hot_wings,
-        "pizza_drink" to R.drawable.pizza_drink,
-        "teen_burger" to R.drawable.teen_burger,
-        "root_beer" to R.drawable.root_beer,
-        "spicy_tuna" to R.drawable.spicy_tuna,
-        "veg_tofu" to R.drawable.veg_tofu,
-        "bun_rieu" to R.drawable.bun_rieu,
-        "coco_matcha" to R.drawable.coco_matcha
-    )
-}
 
 @Composable
 fun RestaurantDetailScreen(
@@ -195,9 +182,7 @@ fun FeaturedItemCard(item: FeaturedItem, cartViewModel: CartViewModel, restauran
     ) {
         Column {
             Image(
-                painter = painterResource(
-                    id = FeaturedImages.imageMap[item.imageName] ?: R.drawable.uncle_fatih
-                ),
+                painter = rememberAsyncImagePainter(item.imageName),
                 contentDescription = "Restaurant Image",
                 modifier = Modifier
                     .fillMaxWidth()
