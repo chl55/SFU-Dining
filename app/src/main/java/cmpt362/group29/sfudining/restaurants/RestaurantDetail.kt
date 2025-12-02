@@ -130,7 +130,7 @@ fun RestaurantDesc(restaurant: Restaurant?) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                "Phone: ${restaurant?.phoneNum}",
+                "Phone: ${restaurant?.phone}",
                 style = MaterialTheme.typography.bodySmall
             )
             Text(
