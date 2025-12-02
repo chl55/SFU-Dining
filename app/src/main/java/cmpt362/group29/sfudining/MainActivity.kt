@@ -23,6 +23,7 @@ import cmpt362.group29.sfudining.auth.AuthRepository
 import cmpt362.group29.sfudining.auth.AuthViewModel
 import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.profile.Profile
+import cmpt362.group29.sfudining.profile.ProfileViewModel
 import cmpt362.group29.sfudining.restaurants.RestaurantNavHost
 import cmpt362.group29.sfudining.ui.theme.SFUDiningTheme
 import cmpt362.group29.sfudining.visits.*
@@ -123,6 +124,7 @@ fun AppNavHost(
     val visitViewModel: VisitViewModel = viewModel(
         factory = VisitViewModelFactory(repository)
     )
+    val profileViewModel: ProfileViewModel = viewModel()
     val userId = AuthRepository().getCurrentUser()?.uid
     visitViewModel.loadVisits(userId ?: "")
     NavHost(navController, startDestination.route) {
@@ -169,7 +171,9 @@ fun AppNavHost(
                                         Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
                                 context.startActivity(intent)
-                            }
+                            },
+                            profileViewModel = profileViewModel,
+                            modifier = modifier
                         )
                     }
                 }
