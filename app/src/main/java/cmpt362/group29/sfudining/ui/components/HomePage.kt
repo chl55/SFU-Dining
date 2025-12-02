@@ -37,20 +37,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cmpt362.group29.sfudining.R
+import cmpt362.group29.sfudining.profile.ProfileViewModel
 import cmpt362.group29.sfudining.restaurants.RecommendsUtils
 import cmpt362.group29.sfudining.restaurants.Restaurant
 import cmpt362.group29.sfudining.restaurants.RestaurantUtils
 import cmpt362.group29.sfudining.restaurants.RestaurantUtils.parsePriceRange
 import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
-import cmpt362.group29.sfudining.visits.Visit
 import cmpt362.group29.sfudining.visits.VisitViewModel
 import coil.compose.rememberAsyncImagePainter
 
-enum class RestaurantCategory(val displayName: String) {
-    OPEN_NOW("Open Now"),
-    RECOMMENDED("Recommended"),
-    UNDER_BUDGET("Under Budget"),
-    NEARBY("Closest Nearby")
+enum class RestaurantCategory {
+    OPEN_NOW,
+    RECOMMENDED,
+    UNDER_BUDGET,
+    NEARBY
+}
+
+fun RestaurantCategory.displayLabel(budgetLimit: Int? = null): String {
+    return when (this) {
+        RestaurantCategory.OPEN_NOW -> "Open Now"
+        RestaurantCategory.RECOMMENDED -> "Recommended"
+        RestaurantCategory.UNDER_BUDGET -> budgetLimit?.let { "Under $$it" } ?: "Under Budget"
+        RestaurantCategory.NEARBY -> "Closest Nearby"
+    }
 }
 
 private fun parseDistanceToMeters(str: String): Float {
@@ -66,14 +75,13 @@ private fun parseDistanceToMeters(str: String): Float {
 fun HomePage(
     restaurantViewModel: RestaurantViewModel,
     visitViewModel: VisitViewModel,
+    profileViewModel: ProfileViewModel,
     modifier: Modifier = Modifier,
     onRestaurantClick: (String) -> Unit
 ) {
     val context = LocalContext.current
-
     val restaurants by restaurantViewModel.restaurants.collectAsState()
     val userVisits by visitViewModel.visits.collectAsState()
-
     var distances by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
     LaunchedEffect(restaurants) {
         distances = restaurants.associate { r ->
@@ -95,10 +103,11 @@ fun HomePage(
         combined.addAll(restaurants.filter { r -> combined.none { it.id == r.id } })
         mutableStateOf(combined)
     }
+    val budget = profileViewModel.dailyBudget ?: 10
 
     val openNowList = remember(restaurants) { restaurants.filter { RestaurantUtils.isOpenNow(it.schedule) } }
     val underBudgetList = remember(restaurants) {
-        restaurants.filter { r -> parsePriceRange(r.averagePrice)?.first?.let { it <= 10 } ?: false }
+        restaurants.filter { r -> parsePriceRange(r.averagePrice)?.first?.let { it <= budget } ?: false }
     }
     val nearbyList = remember(restaurants, distances) {
         restaurants.sortedBy { distances[it.id] ?: Float.MAX_VALUE }
@@ -113,16 +122,16 @@ fun HomePage(
             .padding(6.dp)
     ) {
         if (openNowList.isNotEmpty())
-            RestaurantRow(openNowList, RestaurantCategory.OPEN_NOW.displayName, onRestaurantClick)
+            RestaurantRow(openNowList, RestaurantCategory.OPEN_NOW.displayLabel(), onRestaurantClick)
 
         if (recommends.isNotEmpty())
-            RestaurantRow(recommends, RestaurantCategory.RECOMMENDED.displayName, onRestaurantClick)
+            RestaurantRow(recommends, RestaurantCategory.RECOMMENDED.displayLabel(), onRestaurantClick)
 
         if (underBudgetList.isNotEmpty())
-            RestaurantRow(underBudgetList, RestaurantCategory.UNDER_BUDGET.displayName, onRestaurantClick)
+            RestaurantRow(underBudgetList, RestaurantCategory.UNDER_BUDGET.displayLabel(budget), onRestaurantClick)
 
         if (nearbyList.isNotEmpty())
-            RestaurantRow(nearbyList, RestaurantCategory.NEARBY.displayName, onRestaurantClick)
+            RestaurantRow(nearbyList, RestaurantCategory.NEARBY.displayLabel(), onRestaurantClick)
     }
 }
 

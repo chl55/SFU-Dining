@@ -3,8 +3,10 @@ package cmpt362.group29.sfudining.visits
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -14,12 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import cmpt362.group29.sfudining.auth.AuthRepository
+import cmpt362.group29.sfudining.profile.ProfileViewModel
 import cmpt362.group29.sfudining.restaurants.Restaurant
 import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
 import java.text.SimpleDateFormat
@@ -29,6 +33,7 @@ import java.util.*
 @Composable
 fun AddVisitPage(
     viewModel: VisitViewModel,
+    profileViewModel: ProfileViewModel,
     navController: NavHostController,
     modifier: Modifier,
     initialVisit: Visit?
@@ -46,6 +51,7 @@ fun AddVisitPage(
 
     VisitForm(
         modifier = modifier,
+        profileViewModel = profileViewModel,
         restaurants = restaurants,
         visit = visit,
         onSave = { visit ->
@@ -61,6 +67,7 @@ fun AddVisitPage(
 fun VisitDetailPage(
     visit: Visit,
     viewModel: VisitViewModel,
+    profileViewModel: ProfileViewModel,
     navController: NavHostController,
     modifier: Modifier
 ) {
@@ -76,6 +83,7 @@ fun VisitDetailPage(
         modifier = modifier,
         restaurants = restaurants,
         visit = visit,
+        profileViewModel = profileViewModel,
         onSave = { updatedVisit ->
             userId?.let { viewModel.editVisit(it, updatedVisit) }
             navController.popBackStack()
@@ -93,6 +101,7 @@ fun VisitDetailPage(
 @Composable
 fun VisitForm(
     modifier: Modifier,
+    profileViewModel: ProfileViewModel,
     restaurants: List<Restaurant>,
     visit: Visit,
     onSave: (Visit) -> Unit,
@@ -106,6 +115,13 @@ fun VisitForm(
     var date by remember { mutableStateOf(Calendar.getInstance().apply { time = visit.datetime }) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    val budgetPerVisit = profileViewModel.dailyBudget
+    val caloriesPerVisit = profileViewModel.dailyCalories
+    val totalCostDouble = totalCost.toDoubleOrNull() ?: 0.0
+    val totalCalInt = totalCal.toIntOrNull() ?: 0
+
+    val overBudget = budgetPerVisit != null && totalCostDouble > budgetPerVisit
+    val overCalories = caloriesPerVisit != null && totalCalInt > caloriesPerVisit
 
     val context = LocalContext.current
     val visitItems = remember { mutableStateListOf<VisitItem>().apply { addAll(visit.items) } }
@@ -337,7 +353,67 @@ fun VisitForm(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            if (overBudget) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(2.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(8.dp)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Over Budget",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "You are over your budget per visit! Limit: $${budgetPerVisit}",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            if (overCalories) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(2.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(8.dp)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Over Calories",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "You are over your calorie limit per visit! Limit: $caloriesPerVisit cal",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

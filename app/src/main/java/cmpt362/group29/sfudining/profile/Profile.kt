@@ -119,7 +119,7 @@ fun Profile(
             }
         }
 
-        Divider()
+        HorizontalDivider()
 
         Column(
             modifier = Modifier

@@ -109,7 +109,7 @@ fun InsightsEntryBox(modifier: Modifier = Modifier, navController: NavController
         shape = MaterialTheme.shapes.large,
         elevation = androidx.compose.material3.CardDefaults.cardElevation(6.dp),
         colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = Color(0xFFEC6A6A)
+            containerColor = Color(0xFFFFC3C3)
         )
     ) {
         Row(
