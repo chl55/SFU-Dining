@@ -132,8 +132,8 @@ fun VisitForm(
         items
     }
 
-    val itemsTotalCost by derivedStateOf { visitItems.sumOf { (it.cost ?: 0.0) * it.quantity } }
-    val itemsTotalCal by derivedStateOf { visitItems.sumOf { (it.calories ?: 0) * it.quantity } }
+    val itemsTotalCost by remember { derivedStateOf { visitItems.sumOf { (it.cost ?: 0.0) * it.quantity } } }
+    val itemsTotalCal by remember { derivedStateOf { visitItems.sumOf { (it.calories ?: 0) * it.quantity } } }
 
     var manualCostOverride by remember { mutableStateOf(totalCost.isNotBlank() && visitItems.isEmpty()) }
     var manualCalOverride by remember { mutableStateOf(totalCal.isNotBlank() && visitItems.isEmpty()) }

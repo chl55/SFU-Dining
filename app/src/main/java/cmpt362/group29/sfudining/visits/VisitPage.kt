@@ -33,6 +33,7 @@ import cmpt362.group29.sfudining.auth.AuthRepository
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
 
 fun onVisitClick(navController: NavController, visit: Visit) {
     navController.navigate("visit_detail/${visit.id}")
@@ -181,7 +182,10 @@ fun NoVisitsMessage() {
 fun VisitList(visits: List<Visit>, navController: NavController) {
     val sortedVisits = visits.sortedByDescending { it.datetime }
     LazyColumn {
-        items(sortedVisits) { visit ->
+        items(
+            items = sortedVisits,
+            key = { visit -> visit.id ?: UUID.randomUUID().toString() }
+        ) { visit ->
             VisitItemRow(visit, navController)
         }
     }
