@@ -40,7 +40,8 @@ fun RestaurantNavHost(
                 onCheckInClick = { visit: Visit? ->
                     val visitJson = visit?.let { gson.toJson(it) } ?: ""
                     onNavigateParent("add_visit/$visitJson")
-                }
+                },
+                modifier = modifier
             )
         }
         composable("browse_list") {

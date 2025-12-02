@@ -118,6 +118,10 @@ fun AppNavHost(
     modifier: Modifier = Modifier
 ) {
     val authViewModel: AuthViewModel = viewModel()
+    val repository = remember { VisitRepository(FirebaseFirestore.getInstance()) }
+    val visitViewModel: VisitViewModel = viewModel(
+        factory = VisitViewModelFactory(repository)
+    )
     NavHost(navController, startDestination.route) {
         Destination.entries.forEach { destination ->
             composable(destination.route) {
@@ -144,10 +148,6 @@ fun AppNavHost(
                         }
                     )
                     Destination.CHECKINS -> {
-                        val repository = VisitRepository(FirebaseFirestore.getInstance())
-                        val visitViewModel: VisitViewModel = viewModel(
-                            factory = VisitViewModelFactory(repository)
-                        )
                         VisitPage(modifier, navController, visitViewModel)
                     }
 
@@ -185,15 +185,6 @@ fun AppNavHost(
                 if (visitJson == null || visitJson == "new") null
                 else Gson().fromJson(visitJson, Visit::class.java)
 
-            val repository = VisitRepository(FirebaseFirestore.getInstance())
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry(Destination.CHECKINS.route)
-            }
-            val visitViewModel: VisitViewModel = viewModel(
-                viewModelStoreOwner = parentEntry,
-                factory = VisitViewModelFactory(repository)
-            )
-
             AddVisitPage(
                 viewModel = visitViewModel,
                 navController = navController,
@@ -206,28 +197,12 @@ fun AppNavHost(
             arguments = listOf(navArgument("visitId") { type = NavType.StringType })
         ) { backStackEntry ->
             val visitId = backStackEntry.arguments?.getString("visitId")
-            val repository = VisitRepository(FirebaseFirestore.getInstance())
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry(Destination.CHECKINS.route)
-            }
-            val visitViewModel: VisitViewModel = viewModel(
-                viewModelStoreOwner = parentEntry,
-                factory = VisitViewModelFactory(repository)
-            )
             val visit = visitViewModel.visits.find { it.id == visitId }
             if (visit != null) {
                 VisitDetailPage(visit, visitViewModel, navController, modifier)
             }
         }
-        composable("insights") { backStackEntry ->
-            val repository = VisitRepository(FirebaseFirestore.getInstance())
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry(Destination.CHECKINS.route)
-            }
-            val visitViewModel: VisitViewModel = viewModel(
-                viewModelStoreOwner = parentEntry,
-                factory = VisitViewModelFactory(repository)
-            )
+        composable("insights") {
             InsightsPage(visitViewModel, modifier)
         }
         composable("cart") {

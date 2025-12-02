@@ -34,11 +34,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import cmpt362.group29.sfudining.cart.CartItem
 import cmpt362.group29.sfudining.cart.CartRepository
+import cmpt362.group29.sfudining.restaurants.RestaurantUtils.OpeningStatusBadge
+import cmpt362.group29.sfudining.restaurants.RestaurantUtils.distanceToRestaurant
 import cmpt362.group29.sfudining.visits.Visit
 import cmpt362.group29.sfudining.visits.VisitItem
+import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import java.util.Date
 
@@ -57,7 +72,8 @@ fun cartItemsToVisitItems(cartItems: List<CartItem>): List<VisitItem> {
 fun RestaurantMap(
     restaurants: List<Restaurant>,
     onMarkerClick: (Restaurant) -> Unit,
-    onCheckInClick: (Visit) -> Unit
+    onCheckInClick: (Visit) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val cameraPositionState = rememberCameraPositionState {
@@ -86,7 +102,7 @@ fun RestaurantMap(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
@@ -95,7 +111,7 @@ fun RestaurantMap(
                 isMyLocationEnabled = hasLocationPermission
             )
         ) {
-            for (restaurant in restaurants) {
+            restaurants.forEach { restaurant ->
                 Log.d("ViewModel", "Fetched restaurant: ${restaurant.name}")
                 Marker(
                     state = MarkerState(
@@ -118,25 +134,79 @@ fun RestaurantMap(
                         true
                     }
                 )
-
             }
         }
 
         selectedRestaurant?.let { restaurant ->
             Card(
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Spacer(modifier = Modifier.height(80.dp))
+
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = restaurant.name)
-                    Spacer(modifier = Modifier.height(10.dp))
+
+                    AsyncImage(
+                        model = restaurant.restaurantImageURL,
+                        contentDescription = restaurant.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = restaurant.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        OpeningStatusBadge(restaurant.schedule)
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+
+                    Text(
+                        text = restaurant.cuisine,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+
+                    Spacer(Modifier.height(6.dp))
+
+                    val ctx = LocalContext.current
+
+                    val distance by produceState<String?>(initialValue = null, restaurant.location) {
+                        value = distanceToRestaurant(ctx, restaurant.location)
+                    }
+                    distance?.let {
+                        Text(it)
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Button(
                             onClick = {
-                                val visitItems = cartItemsToVisitItems(CartRepository.cartItems)
+                                val visitItems = cartItemsToVisitItems(
+                                    CartRepository.cartItems.filter {
+                                        it.restaurantName == restaurant.name
+                                    }
+                                )
+
                                 val visit = Visit(
                                     restaurantId = restaurant.id,
                                     restaurantName = restaurant.name,
@@ -146,14 +216,24 @@ fun RestaurantMap(
                                     datetime = Date()
                                 )
                                 onCheckInClick(visit)
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Check-in")
                         }
-                        Button(onClick = { onMarkerClick(restaurant) }) {
-                            Text("Restaurant Details")
+
+                        Spacer(Modifier.width(8.dp))
+
+                        OutlinedButton(
+                            onClick = { onMarkerClick(restaurant) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Details")
                         }
-                        Button(onClick = { selectedRestaurant = null }) {
+
+                        Spacer(Modifier.width(8.dp))
+
+                        TextButton(onClick = { selectedRestaurant = null }) {
                             Text("Close")
                         }
                     }
