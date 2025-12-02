@@ -1,5 +1,6 @@
 package cmpt362.group29.sfudining.visits
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.*
@@ -16,10 +17,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import cmpt362.group29.sfudining.auth.AuthRepository
+import cmpt362.group29.sfudining.restaurants.Restaurant
+import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.text.clear
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,8 +39,15 @@ fun AddVisitPage(
         datetime = Date()
     )
 
+    val restaurantViewModel: RestaurantViewModel = viewModel()
+    val restaurants by restaurantViewModel.restaurants.collectAsState()
+    LaunchedEffect(Unit) {
+        restaurantViewModel.getRestaurants()
+    }
+
     VisitForm(
         modifier = modifier,
+        restaurants = restaurants,
         visit = visit,
         onSave = { visit ->
             userId?.let { viewModel.addVisit(it, visit) }
@@ -55,8 +67,15 @@ fun VisitDetailPage(
 ) {
     val userId = AuthRepository().getCurrentUser()?.uid
 
+    val restaurantViewModel: RestaurantViewModel = viewModel()
+    val restaurants by restaurantViewModel.restaurants.collectAsState()
+    LaunchedEffect(Unit) {
+        restaurantViewModel.getRestaurants()
+    }
+
     VisitForm(
         modifier = modifier,
+        restaurants = restaurants,
         visit = visit,
         onSave = { updatedVisit ->
             userId?.let { viewModel.editVisit(it, updatedVisit) }
@@ -70,10 +89,12 @@ fun VisitDetailPage(
     )
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisitForm(
     modifier: Modifier,
+    restaurants: List<Restaurant>,
     visit: Visit,
     onSave: (Visit) -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -89,9 +110,30 @@ fun VisitForm(
 
     val context = LocalContext.current
     val visitItems = remember { mutableStateListOf<VisitItem>().apply { addAll(visit.items) } }
+    var expandedRestaurantField by remember { mutableStateOf(false) }
 
-    val itemsTotalCost by derivedStateOf { visitItems.sumOf { (it.cost ?: 0.0) * it.quantity } }
-    val itemsTotalCal by derivedStateOf { visitItems.sumOf { (it.calories ?: 0) * it.quantity } }
+    // Get available items based on selected restaurant
+    val selectedRestaurant = restaurants.find { it.name == restaurantName }
+    val availableItems = remember(selectedRestaurant) {
+        val items = mutableMapOf<String, Pair<Double, Int>>()
+        selectedRestaurant?.let { r ->
+            // Featured Items and Menu items will be combined
+            r.featuredItems.forEach { item ->
+                val price = item.price.replace("$", "").toDoubleOrNull() ?: 0.0
+                val cal = item.kcal.toIntOrNull() ?: 0
+                items[item.title] = Pair(price, cal)
+            }
+            r.menu.forEach { item ->
+                val price = item.price.replace("$", "").toDoubleOrNull() ?: 0.0
+                val cal = item.kcal.toIntOrNull() ?: 0
+                items[item.title] = Pair(price, cal)
+            }
+        }
+        items
+    }
+
+    val itemsTotalCost by remember { derivedStateOf { visitItems.sumOf { (it.cost ?: 0.0) * it.quantity } } }
+    val itemsTotalCal by remember { derivedStateOf { visitItems.sumOf { (it.calories ?: 0) * it.quantity } } }
 
     var manualCostOverride by remember { mutableStateOf(totalCost.isNotBlank() && visitItems.isEmpty()) }
     var manualCalOverride by remember { mutableStateOf(totalCal.isNotBlank() && visitItems.isEmpty()) }
@@ -154,12 +196,44 @@ fun VisitForm(
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text("Visit Information", style = MaterialTheme.typography.titleMedium)
 
-                    OutlinedTextField(
-                        value = restaurantName,
-                        onValueChange = { restaurantName = it },
-                        label = { Text("Restaurant Name") },
+                    // Restaurant Name Drop-down box
+                    ExposedDropdownMenuBox(
+                        expanded = expandedRestaurantField,
+                        onExpandedChange = { expandedRestaurantField = !expandedRestaurantField },
                         modifier = Modifier.fillMaxWidth()
-                    )
+                    ) {
+                        OutlinedTextField(
+                            value = restaurantName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Restaurant Name") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRestaurantField) },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedRestaurantField,
+                            onDismissRequest = { expandedRestaurantField = false }
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .heightIn(max = 400.dp)
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                restaurants.forEach { restaurant ->
+                                    DropdownMenuItem(
+                                        text = { Text(restaurant.name) },
+                                        onClick = {
+                                            restaurantName = restaurant.name
+                                            expandedRestaurantField = false
+                                            // Clear items if restaurant field changes
+                                            visitItems.clear()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     OutlinedTextField(
                         value = totalCost,
@@ -210,6 +284,7 @@ fun VisitForm(
                 visitItems.forEachIndexed { index, item ->
                     VisitItemRow(
                         item = item,
+                        availableItems = availableItems,
                         onUpdate = { updated ->
                             visitItems[index] = updated
                         },
@@ -256,9 +331,11 @@ fun VisitForm(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VisitItemRow(
     item: VisitItem,
+    availableItems: Map<String, Pair<Double, Int>>,
     onUpdate: (VisitItem) -> Unit,
     onRemove: () -> Unit
 ) {
@@ -266,6 +343,7 @@ fun VisitItemRow(
     var cost by remember { mutableStateOf(item.cost?.toString() ?: "0") }
     var calories by remember { mutableStateOf(item.calories?.toString() ?: "0") }
     var quantity by remember { mutableStateOf(item.quantity) }
+    var expanded by remember { mutableStateOf(false) }
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -273,15 +351,47 @@ fun VisitItemRow(
     ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
-                    },
-                    label = { Text("Item Name") },
-                    modifier = Modifier.weight(1f)
-                )
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                        },
+                        label = { Text("Item Name") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier.menuAnchor()
+                    )
+
+                    // Display available items for selected restaurant, update cost and calories based on item
+                    if (availableItems.isNotEmpty()) {
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            availableItems.keys.forEach { itemName ->
+                                DropdownMenuItem(
+                                    text = { Text(itemName) },
+                                    onClick = {
+                                        name = itemName
+                                        val details = availableItems[itemName]
+                                        if (details != null) {
+                                            cost = details.first.toString()
+                                            calories = details.second.toString()
+                                        }
+                                        expanded = false
+                                        onUpdate(item.copy(itemName = name, cost = cost.toDoubleOrNull(), calories = calories.toIntOrNull(), quantity = quantity))
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
                 IconButton(onClick = onRemove) {
                     Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = MaterialTheme.colorScheme.error)
                 }
