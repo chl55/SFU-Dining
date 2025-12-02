@@ -153,7 +153,8 @@ fun HomePage(modifier: Modifier = Modifier,
 
         if (recommends.isNotEmpty()) {
             recommends.shuffle()
-            RestaurantRow(recommends, "Recommended Restaurants", onRestaurantClick)
+            val uniqueRecommends = recommends.distinctBy { it.id }
+            RestaurantRow(uniqueRecommends, "Recommended Restaurants", onRestaurantClick)
         }
 
         categories.categories.forEach { category ->
