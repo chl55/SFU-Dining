@@ -56,7 +56,9 @@ object FeaturedImages {
         "teen_burger" to R.drawable.teen_burger,
         "root_beer" to R.drawable.root_beer,
         "spicy_tuna" to R.drawable.spicy_tuna,
-        "veg_tofu" to R.drawable.veg_tofu
+        "veg_tofu" to R.drawable.veg_tofu,
+        "bun_rieu" to R.drawable.bun_rieu,
+        "coco_matcha" to R.drawable.coco_matcha
     )
 }
 
