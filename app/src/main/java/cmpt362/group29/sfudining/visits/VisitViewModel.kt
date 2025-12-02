@@ -3,30 +3,33 @@ package cmpt362.group29.sfudining.visits
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class VisitViewModel(private val repository: VisitRepository) : ViewModel() {
 
-    val visits = mutableStateListOf<Visit>()
+    private val _visits = MutableStateFlow<List<Visit>>(emptyList())
+    val visits: StateFlow<List<Visit>> = _visits
 
     fun loadVisits(userId: String) {
         repository.getVisits(userId) { list ->
-            visits.clear()
-            visits.addAll(list)
+            _visits.value = list
         }
     }
 
     fun addVisit(userId: String, visit: Visit) {
         repository.addVisit(userId, visit) { success ->
-            if (success) visits.add(visit)
+            if (success) {
+                _visits.value += visit
+            }
         }
     }
 
     fun editVisit(userId: String, visit: Visit) {
         repository.editVisit(userId, visit) { success ->
             if (success) {
-                val index = visits.indexOfFirst { it.id == visit.id }
-                if (index != -1) {
-                    visits[index] = visit
+                _visits.value = _visits.value.map {
+                    if (it.id == visit.id) visit else it
                 }
             }
         }
@@ -35,7 +38,7 @@ class VisitViewModel(private val repository: VisitRepository) : ViewModel() {
     fun deleteVisit(userId: String, visitId: String) {
         repository.deleteVisit(userId, visitId) { success ->
             if (success) {
-                visits.removeAll { it.id == visitId }
+                _visits.value = _visits.value.filter { it.id != visitId }
             }
         }
     }

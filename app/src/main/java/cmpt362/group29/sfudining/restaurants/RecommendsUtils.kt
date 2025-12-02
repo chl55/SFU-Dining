@@ -33,27 +33,26 @@ class RecommendsUtils {
         visits: List<Visit>,
         allRestaurants: List<Restaurant>
     ): List<Restaurant> {
-        if (visits.isEmpty())
-            return emptyList()
-
+        if (visits.isEmpty()) return emptyList()
         val cuisineCounts = mutableMapOf<String, Int>()
+        val latestVisitTime = mutableMapOf<String, Long>() // secondary sort key
         visits.forEach { visit ->
-            val restaurant = allRestaurants.find { it.id == visit.restaurantId }
+            val restaurant = allRestaurants.find { it.name.equals(visit.restaurantName, ignoreCase = true) }
             restaurant?.let {
-                val count = cuisineCounts.getOrDefault(it.cuisine, 0)
-                cuisineCounts[it.cuisine] = count + 1
+                cuisineCounts[it.cuisine] = cuisineCounts.getOrDefault(it.cuisine, 0) + 1
+                latestVisitTime[it.cuisine] = maxOf(latestVisitTime.getOrDefault(it.cuisine, 0L), visit.datetime.time)
             }
         }
-
         val topCuisines = cuisineCounts.entries
-            .sortedByDescending { it.value }
+            .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }
+                .thenByDescending { latestVisitTime[it.key] ?: 0L })
             .map { it.key }
             .take(3)
-
         return allRestaurants
             .filter { it.cuisine in topCuisines }
-            .sortedByDescending {
-                if (it.cuisine == topCuisines.firstOrNull()) 2 else 1
-            }
+            .sortedWith(compareBy(
+                { topCuisines.indexOf(it.cuisine) },
+                { it.name.lowercase() }
+            ))
     }
 }

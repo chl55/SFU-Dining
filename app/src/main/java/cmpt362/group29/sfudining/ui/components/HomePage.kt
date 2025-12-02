@@ -1,5 +1,6 @@
 package cmpt362.group29.sfudining.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -36,10 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cmpt362.group29.sfudining.R
+import cmpt362.group29.sfudining.restaurants.RecommendsUtils
 import cmpt362.group29.sfudining.restaurants.Restaurant
 import cmpt362.group29.sfudining.restaurants.RestaurantUtils
 import cmpt362.group29.sfudining.restaurants.RestaurantUtils.parsePriceRange
 import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
+import cmpt362.group29.sfudining.visits.Visit
 import cmpt362.group29.sfudining.visits.VisitViewModel
 import coil.compose.rememberAsyncImagePainter
 
@@ -69,7 +72,7 @@ fun HomePage(
     val context = LocalContext.current
 
     val restaurants by restaurantViewModel.restaurants.collectAsState()
-    val userVisits by visitViewModel.visits.collectAsState(initial = emptyMap())
+    val userVisits by visitViewModel.visits.collectAsState()
 
     var distances by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
     LaunchedEffect(restaurants) {
@@ -80,22 +83,33 @@ fun HomePage(
         }
     }
 
-    val recommends by remember(restaurants, userVisits) {
+    val recommends by remember(restaurants, userVisits, distances) {
         val utils = RecommendsUtils()
-        val visitList = userVisits.entries.map { Visit(it.key, it.value) }
-        mutableStateOf(utils.recommendByHistory(visits = visitList, allRestaurants = restaurants))
+        val byVisits = utils.recommendByHistory(visits = userVisits, allRestaurants = restaurants)
+        val byDistance = distances.entries
+            .sortedBy { it.value }
+            .mapNotNull { entry -> restaurants.find { it.id == entry.key } }
+            .filter { r -> byVisits.none { it.id == r.id } }
+            .take(3)
+        val combined = (byVisits + byDistance).toMutableList()
+        combined.addAll(restaurants.filter { r -> combined.none { it.id == r.id } })
+        mutableStateOf(combined)
     }
 
-    val openNowList = restaurants.filter { RestaurantUtils.isOpenNow(it.schedule) }
-    val underBudgetList = restaurants.filter { r ->
-        parsePriceRange(r.averagePrice)?.first?.let { it <= 10 } ?: false
+    val openNowList = remember(restaurants) { restaurants.filter { RestaurantUtils.isOpenNow(it.schedule) } }
+    val underBudgetList = remember(restaurants) {
+        restaurants.filter { r -> parsePriceRange(r.averagePrice)?.first?.let { it <= 10 } ?: false }
     }
-    val nearbyList = restaurants.sortedBy { distances[it.id] ?: Float.MAX_VALUE }
+    val nearbyList = remember(restaurants, distances) {
+        restaurants.sortedBy { distances[it.id] ?: Float.MAX_VALUE }
+    }
+
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(6.dp)
     ) {
         if (openNowList.isNotEmpty())

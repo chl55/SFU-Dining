@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,7 +57,7 @@ fun VisitPage(
     LaunchedEffect(userId) {
         viewModel.loadVisits(userId!!)
     }
-    val visits = viewModel.visits
+    val visits by viewModel.visits.collectAsState()
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -63,37 +65,30 @@ fun VisitPage(
         if (visits.isEmpty()) {
             NoVisitsMessage()
         } else {
-            if (visits.isEmpty()) {
-                NoVisitsMessage()
-            } else {
-                Column(
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    text = "Insights",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.padding(8.dp)
+                )
+                InsightsEntryBox(
                     modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    Text(
-                        text = "Insights",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier
-                            .padding(8.dp)
-                    )
-                    InsightsEntryBox(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        navController = navController
-                    )
-                    Text(
-                        text = "Check-Ins",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier
-                            .padding(8.dp)
-                    )
-                    VisitList(visits, navController)
-                }
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    navController = navController
+                )
+                Text(
+                    text = "Check-Ins",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.padding(8.dp)
+                )
+                VisitList(visits, navController)
             }
         }
     }
