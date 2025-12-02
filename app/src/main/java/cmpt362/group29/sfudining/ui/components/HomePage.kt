@@ -1,5 +1,10 @@
 package cmpt362.group29.sfudining.ui.components
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -26,35 +31,131 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cmpt362.group29.sfudining.R
+import cmpt362.group29.sfudining.auth.AuthRepository
 import cmpt362.group29.sfudining.restaurants.Restaurant
+import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
+import cmpt362.group29.sfudining.visits.VisitRepository
+import cmpt362.group29.sfudining.visits.VisitViewModel
+import cmpt362.group29.sfudining.visits.VisitViewModelFactory
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.location.LocationServices
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun HomePage(restaurants: List<Restaurant>,
-             modifier: Modifier = Modifier,
+fun HomePage(modifier: Modifier = Modifier,
              onRestaurantClick: (String) -> Unit) {
     val categoryViewModel: RestaurantCategoryViewModel = viewModel()
+    val restaurantViewModel: RestaurantViewModel = viewModel()
+    val visitRepository = VisitRepository(FirebaseFirestore.getInstance())
+    val visitViewModel: VisitViewModel = viewModel(
+        factory = VisitViewModelFactory(visitRepository)
+    )
+
+    val context = LocalContext.current
     val categories by categoryViewModel.categories.collectAsState()
+    val nearby by restaurantViewModel.nearbyRestaurants.collectAsState()
+    val historyRecommendeds by restaurantViewModel.recommendedRestaurants.collectAsState()
+    val restaurants by restaurantViewModel.restaurants.collectAsState()
+
+    val visits = visitViewModel.visits
+    val userEmail = AuthRepository().getUserEmail()
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Prompt for users location request, should be prompted in map as well
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasLocationPermission = granted
+    }
+
     LaunchedEffect(Unit) {
         categoryViewModel.getCategories()
+        restaurantViewModel.getRestaurants()
+        if (userEmail != null) {
+            val userId = AuthRepository().getCurrentUser()?.uid
+            if (userId != null) {
+                visitViewModel.loadVisits(userId)
+            } else {
+                Log.d("Homepage", "user id not found!")
+            }
+        }
+
+        if (!hasLocationPermission) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
+
+    // State update for visits
+    LaunchedEffect(visits.size) {
+        if (visits.isNotEmpty()) {
+            restaurantViewModel.generateUserRecommendations(visits)
+            Log.d("Homepage visits", visits.toString())
+        } else {
+            Log.d("Homepage", "visits empty")
+        }
+    }
+
+    LaunchedEffect(restaurants, hasLocationPermission) {
+        if (hasLocationPermission) {
+            val locationResult = fusedLocationClient.lastLocation
+            locationResult.addOnSuccessListener { location ->
+                if (location != null) {
+                    restaurantViewModel.updateLocation(location)
+                }
+            }
+        } else {
+            Log.d("Homepage", "no location perms granted")
+        }
+    }
+
+    val recommends = mutableListOf<Restaurant>()
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(6.dp)
     ) {
+        if (nearby.isNotEmpty()) {
+            recommends.addAll(nearby)
+        } else {
+            Log.d("Homepage", "nearby empty")
+        }
+
+        if (historyRecommendeds.isNotEmpty()) {
+            recommends.addAll(historyRecommendeds)
+        } else {
+            Log.d("Homepage", "recommends empty")
+        }
+
+        if (recommends.isNotEmpty()) {
+            recommends.shuffle()
+            RestaurantRow(recommends, "Recommended Restaurants", onRestaurantClick)
+        }
+
         categories.categories.forEach { category ->
             RestaurantRow(restaurants, category, onRestaurantClick)
 //            restaurants.filter{ it.cuisine == category }
@@ -178,12 +279,12 @@ private fun Reviews() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    HomePage(
-        restaurants = emptyList(),
-        modifier = Modifier,
-        onRestaurantClick = {}
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//private fun Preview() {
+//    HomePage(
+//        restaurants = emptyList(),
+//        modifier = Modifier,
+//        onRestaurantClick = {}
+//    )
+//}
