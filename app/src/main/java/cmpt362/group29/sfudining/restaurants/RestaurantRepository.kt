@@ -10,14 +10,16 @@ import kotlinx.coroutines.tasks.await
 data class MenuItem(
     val title: String = "",
     val description: String = "",
-    val price: String = ""
+    val price: String = "",
+    val kcal: String = ""
 )
 
 data class FeaturedItem(
     val title: String = "",
     val description: String = "",
     val price: String = "",
-    val imageName: String = ""
+    val imageName: String = "",
+    val kcal: String = ""
 )
 
 data class OpeningHours(
@@ -27,7 +29,7 @@ data class OpeningHours(
 data class Restaurant(
     val id: String = "",
     val description: String = "",
-    val average_price: String = "",
+    val averagePrice: String = "",
     val name: String = "",
     val location: GeoPoint = GeoPoint(0.0, 0.0),
     val cuisine: String = "",
@@ -36,7 +38,7 @@ data class Restaurant(
     val address: String = "",
     val featuredItems: List<FeaturedItem> = emptyList(),
     val menu: List<MenuItem> = emptyList(),
-    val restaurantImageURL: String = "",
+    val restaurantImageURL: String = ""
 )
 
 class RestaurantRepository {
