@@ -34,11 +34,12 @@ data class Restaurant(
     val location: GeoPoint = GeoPoint(0.0, 0.0),
     val cuisine: String = "",
     val schedule: List<OpeningHours> = emptyList(),
-    val phoneNum: String = "",
+    val phone: String = "",
     val address: String = "",
     val featuredItems: List<FeaturedItem> = emptyList(),
     val menu: List<MenuItem> = emptyList(),
-    val restaurantImageURL: String = ""
+    val restaurantImageURL: String = "",
+    val website: String = ""
 )
 
 class RestaurantRepository {

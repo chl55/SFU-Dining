@@ -10,17 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,30 +25,27 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cmpt362.group29.sfudining.R
 import cmpt362.group29.sfudining.restaurants.Restaurant
 import cmpt362.group29.sfudining.restaurants.RestaurantUtils
 import cmpt362.group29.sfudining.restaurants.RestaurantUtils.parsePriceRange
+import cmpt362.group29.sfudining.restaurants.RestaurantViewModel
+import cmpt362.group29.sfudining.visits.VisitViewModel
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.launch
-import android.util.Log
-import androidx.compose.ui.text.style.TextOverflow
 
 enum class RestaurantCategory(val displayName: String) {
     OPEN_NOW("Open Now"),
+    RECOMMENDED("Recommended"),
     UNDER_BUDGET("Under Budget"),
     NEARBY("Closest Nearby")
 }
@@ -68,27 +61,36 @@ private fun parseDistanceToMeters(str: String): Float {
 
 @Composable
 fun HomePage(
-    restaurants: List<Restaurant>,
+    restaurantViewModel: RestaurantViewModel,
+    visitViewModel: VisitViewModel,
     modifier: Modifier = Modifier,
     onRestaurantClick: (String) -> Unit
 ) {
     val context = LocalContext.current
-    var distances by remember { mutableStateOf<Map<String, Float>?>(null) }
 
+    val restaurants by restaurantViewModel.restaurants.collectAsState()
+    val userVisits by visitViewModel.visits.collectAsState(initial = emptyMap())
+
+    var distances by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
     LaunchedEffect(restaurants) {
-        val map = restaurants.associate { r ->
+        distances = restaurants.associate { r ->
             val rawDistance = RestaurantUtils.distanceToRestaurant(context, r.location)
             val meters = rawDistance?.let { parseDistanceToMeters(it) } ?: Float.MAX_VALUE
             r.id to meters
         }
-        distances = map
     }
 
-    val categories = listOf(
-        RestaurantCategory.OPEN_NOW,
-        RestaurantCategory.UNDER_BUDGET,
-        RestaurantCategory.NEARBY
-    )
+    val recommends by remember(restaurants, userVisits) {
+        val utils = RecommendsUtils()
+        val visitList = userVisits.entries.map { Visit(it.key, it.value) }
+        mutableStateOf(utils.recommendByHistory(visits = visitList, allRestaurants = restaurants))
+    }
+
+    val openNowList = restaurants.filter { RestaurantUtils.isOpenNow(it.schedule) }
+    val underBudgetList = restaurants.filter { r ->
+        parsePriceRange(r.averagePrice)?.first?.let { it <= 10 } ?: false
+    }
+    val nearbyList = restaurants.sortedBy { distances[it.id] ?: Float.MAX_VALUE }
 
     Column(
         modifier = modifier
@@ -96,33 +98,20 @@ fun HomePage(
             .verticalScroll(rememberScrollState())
             .padding(6.dp)
     ) {
-        categories.forEach { category ->
-            val filtered = when (category) {
-                RestaurantCategory.OPEN_NOW ->
-                    restaurants.filter { RestaurantUtils.isOpenNow(it.schedule) }
+        if (openNowList.isNotEmpty())
+            RestaurantRow(openNowList, RestaurantCategory.OPEN_NOW.displayName, onRestaurantClick)
 
-                RestaurantCategory.UNDER_BUDGET ->
-                    restaurants.filter { r ->
-                        parsePriceRange(r.averagePrice)?.first?.let { it <= 10 } ?: false
-                    }
+        if (recommends.isNotEmpty())
+            RestaurantRow(recommends, RestaurantCategory.RECOMMENDED.displayName, onRestaurantClick)
 
-                RestaurantCategory.NEARBY ->
-                    distances?.let { distMap ->
-                        val sorted = restaurants.sortedBy { distMap[it.id] ?: Float.MAX_VALUE }
-                        sorted
-                    } ?: emptyList()
-            }
+        if (underBudgetList.isNotEmpty())
+            RestaurantRow(underBudgetList, RestaurantCategory.UNDER_BUDGET.displayName, onRestaurantClick)
 
-            if (filtered.isNotEmpty()) {
-                RestaurantRow(
-                    restaurants = filtered,
-                    category = category.displayName,
-                    onRestaurantClick = onRestaurantClick
-                )
-            }
-        }
+        if (nearbyList.isNotEmpty())
+            RestaurantRow(nearbyList, RestaurantCategory.NEARBY.displayName, onRestaurantClick)
     }
 }
+
 
 @Composable
 fun RestaurantRow(
@@ -182,7 +171,6 @@ private fun RestaurantInfo(restaurant: Restaurant) {
     }
 
     Column(modifier = Modifier.padding(12.dp)) {
-        // Row 1: Name
         Text(
             text = restaurant.name,
             style = MaterialTheme.typography.titleMedium,
@@ -245,15 +233,5 @@ private fun FoodImage(restaurantImageURL: String) {
             .height(150.dp)
             .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
         contentScale = ContentScale.Crop
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    HomePage(
-        restaurants = emptyList(),
-        modifier = Modifier,
-        onRestaurantClick = {}
     )
 }
