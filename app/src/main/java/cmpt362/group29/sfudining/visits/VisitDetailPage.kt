@@ -406,7 +406,7 @@ fun VisitForm(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "You are over your calorie limit per visit! Limit: $caloriesPerVisit cal",
+                            text = "You are over your calorie limit per visit! Limit: $caloriesPerVisit kcal",
                             color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
                         )

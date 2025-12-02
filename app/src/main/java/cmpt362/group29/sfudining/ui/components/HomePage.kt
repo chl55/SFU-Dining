@@ -212,7 +212,8 @@ private fun RestaurantInfo(restaurant: Restaurant) {
             Text(
                 text = restaurant.cuisine,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.weight(1f)
             )
 
             RestaurantUtils.OpeningStatusBadge(restaurant.schedule)

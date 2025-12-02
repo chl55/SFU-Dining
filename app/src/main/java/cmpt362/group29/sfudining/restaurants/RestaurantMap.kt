@@ -2,7 +2,6 @@ package cmpt362.group29.sfudining.restaurants
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
