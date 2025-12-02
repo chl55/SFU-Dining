@@ -19,6 +19,7 @@ class RestaurantViewModel(
     private val _restaurant = MutableStateFlow<Restaurant?>(null)
     val restaurant: StateFlow<Restaurant?> = _restaurant
 
+
     fun getRestaurants() {
         viewModelScope.launch {
             _restaurants.value = repository.getRestaurants()

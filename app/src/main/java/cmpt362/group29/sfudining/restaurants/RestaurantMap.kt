@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -70,7 +71,7 @@ fun cartItemsToVisitItems(cartItems: List<CartItem>): List<VisitItem> {
 
 @Composable
 fun RestaurantMap(
-    restaurants: List<Restaurant>,
+    restaurantViewModel: RestaurantViewModel,
     onMarkerClick: (Restaurant) -> Unit,
     onCheckInClick: (Visit) -> Unit,
     modifier: Modifier = Modifier
@@ -80,7 +81,7 @@ fun RestaurantMap(
         position = CameraPosition.fromLatLngZoom(LatLng(49.2781, -122.9199), 15f)
     }
     var selectedRestaurant by remember { mutableStateOf<Restaurant?>(null) }
-
+    val restaurants by restaurantViewModel.restaurants.collectAsState()
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
