@@ -15,12 +15,14 @@ import cmpt362.group29.sfudining.cart.CartDetailScreen
 import cmpt362.group29.sfudining.cart.CartViewModel
 import cmpt362.group29.sfudining.ui.components.HomePage
 import cmpt362.group29.sfudining.visits.Visit
+import cmpt362.group29.sfudining.visits.VisitViewModel
 import com.google.gson.Gson
 
 @Composable
 fun RestaurantNavHost(
     modifier: Modifier,
     startDestination: String = "map",
+    visitViewModel: VisitViewModel,
     onNavigateParent: (String) -> Unit
 ) {
     val navController = rememberNavController()
@@ -40,7 +42,8 @@ fun RestaurantNavHost(
                 onCheckInClick = { visit: Visit? ->
                     val visitJson = visit?.let { gson.toJson(it) } ?: ""
                     onNavigateParent("add_visit/$visitJson")
-                }
+                },
+                modifier = modifier
             )
         }
         composable("browse_list") {
@@ -53,6 +56,8 @@ fun RestaurantNavHost(
         }
         composable("home_page") {
             HomePage(
+                restaurantViewModel = viewModel,
+                visitViewModel = visitViewModel,
                 modifier = modifier,
                 onRestaurantClick = { restaurantId ->
                     navController.navigate("info/$restaurantId")

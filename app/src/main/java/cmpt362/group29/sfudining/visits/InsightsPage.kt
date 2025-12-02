@@ -38,14 +38,12 @@ fun InsightsPage(
     var currentMonth by remember { mutableStateOf(Calendar.getInstance()) }
     var selectedMetric by remember { mutableStateOf(Metric.SPENDING) }
     var selectedMode by remember { mutableStateOf(Mode.DAILY) }
-    val visitsThisMonth = remember(viewModel.visits, currentMonth) {
-        val cal = Calendar.getInstance()
-        viewModel.visits.filter { v ->
-            v.datetime.let {
-                cal.time = it
-                cal.get(Calendar.YEAR) == currentMonth.get(Calendar.YEAR) &&
-                        cal.get(Calendar.MONTH) == currentMonth.get(Calendar.MONTH)
-            }
+    val visits by viewModel.visits.collectAsState()
+    val visitsThisMonth = remember(visits, currentMonth) {
+        visits.filter { v ->
+            val cal = Calendar.getInstance().apply { time = v.datetime }
+            cal.get(Calendar.YEAR) == currentMonth.get(Calendar.YEAR) &&
+                    cal.get(Calendar.MONTH) == currentMonth.get(Calendar.MONTH)
         }
     }
 
