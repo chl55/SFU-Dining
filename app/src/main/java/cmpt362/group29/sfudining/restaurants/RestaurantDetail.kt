@@ -51,6 +51,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import cmpt362.group29.sfudining.cart.CartItem
@@ -141,14 +142,16 @@ fun RestaurantDesc(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 12.dp)
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = restaurant?.name ?: "Unknown Restaurant",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
 
             Spacer(modifier = Modifier.width(8.dp))
